@@ -66,7 +66,7 @@ if not st.session_state.logged_in:
                     st.error("Invalid Passcode! Please check your credentials.")
     st.stop()
 
-# --- SIDEBAR USER & LOCK STATUS ---
+# --- SIDEBAR USER & STATUS ---
 st.sidebar.title("System Status")
 st.sidebar.write(f"👤 **User:** {st.session_state.current_user}")
 st.sidebar.write(f"🛡️ **Role:** {st.session_state.user_role}")
@@ -85,14 +85,14 @@ if st.sidebar.button("Logout"):
 st.title("Ceylon Coffee Tablets (Pvt) Ltd - Enterprise System")
 st.markdown("*Drop it. Dissolve it. Done. | Corporate Management Portal*")
 
-# Navigation Tabs (Including Letters & Memos)
+# Navigation Tabs
 tabs = st.tabs([
     "📊 Cost & Pricing (Secure)", 
     "🧪 Lab & R&D Reports", 
     "📦 Raw Materials (RM-LOG)", 
     "✉️ Letters & Memos", 
     "📄 Professional Invoice Generator", 
-    "📋 Directors & All Records"
+    "📋 Directors & Records Dashboard"
 ])
 
 # --- TAB 1: COST & PROFIT ANALYSIS & LOCK CONTROL ---
@@ -100,9 +100,9 @@ with tabs[0]:
     st.header("Tablet Production Cost & Profit Structure Analysis")
     
     if st.session_state.prices_locked:
-        st.warning("🔒 **මෙම මිල ගණන් සහ නිෂ්පාදන පිරිවැය මේ වන විට ADMIN විසින් Lock කර ඇත.** වෙනස් කිරීම් සිදුකිරීමට අවශ්‍ය නම් Admin (ක්‍රිශන් දමිත්) අතින් එය Unlock කළ යුතුය.")
+        st.warning("🔒 **මෙම මිල ගණන් සහ නිෂ්පාදන පිරිවැය මේ වන විට ADMIN විසින් Lock කර ඇත.**")
     else:
-        st.info("🔓 පද්ධතිය දැනට Unlock කර ඇත. Admin කෙනෙකුට අවශ්‍ය වෙනස්කම් සිදු කර අවසානයේ එය Lock කළ හැක.")
+        st.info("🔓 පද්ධතිය දැනට Unlock කර ඇත.")
 
     if st.session_state.user_role == "Admin":
         col_lk1, col_lk2 = st.columns(2)
@@ -118,8 +118,6 @@ with tabs[0]:
                     st.session_state.prices_locked = False
                     st.success("Costs and Prices have been unlocked for editing.")
                     st.rerun()
-    else:
-        st.markdown("*සටහන: මිල ගණන් සහ පිරිවැය වෙනස් කිරීමේ හෝ Lock/Unlock කිරීමේ බලය ඇත්තේ ඇඩ්මින් (ක්‍රිශන් දමිත්) වෙත පමණි.*")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -165,13 +163,16 @@ with tabs[0]:
         "Trade Price": st.session_state.trade_price,
         "Status": "LOCKED" if st.session_state.prices_locked else "UNLOCKED"
     }])
-    st.download_button("📥 Download Cost Analysis Report (CSV)", cost_data.to_csv(index=False).encode('utf-8'), "cost_analysis.csv", "text/csv")
+    
+    # DOWNLOAD RESTRICTED TO ADMIN ONLY
+    if st.session_state.user_role == "Admin":
+        st.download_button("📥 Download Cost Analysis Report (CSV)", cost_data.to_csv(index=False).encode('utf-8'), "cost_analysis.csv", "text/csv")
+    else:
+        st.info("🔒 ඩවුන්ලෝඩ් කරගැනීමේ අවසරය ඇත්තේ ඇඩ්මින් (ක්‍රිශන් දමිත්) වෙත පමණි.")
 
 # --- TAB 2: LAB / R&D REPORTS ---
 with tabs[1]:
     st.header("Lab & R&D Quality Control Reports (BPR-QC Master)")
-    st.markdown("පරීක්ෂණ වාර්තා සහ PDF දත්ත ඇතුළත් කර ඡායාරූප (Photos) සමඟ සුරකින්න.")
-
     with st.form("rd_form"):
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -205,7 +206,8 @@ with tabs[1]:
         st.subheader("Saved R&D Logs")
         rd_df = pd.DataFrame(st.session_state.rd_logs)
         st.table(rd_df)
-        st.download_button("📥 Download R&D Reports (CSV)", rd_df.to_csv(index=False).encode('utf-8'), "rd_logs_report.csv", "text/csv")
+        if st.session_state.user_role == "Admin":
+            st.download_button("📥 Download R&D Reports (CSV)", rd_df.to_csv(index=False).encode('utf-8'), "rd_logs_report.csv", "text/csv")
 
 # --- TAB 3: RAW MATERIALS (RM-LOG) ---
 with tabs[2]:
@@ -239,13 +241,12 @@ with tabs[2]:
         st.subheader("Raw Materials Stock & Sourcing Log")
         rm_df = pd.DataFrame(st.session_state.rm_logs)
         st.table(rm_df)
-        st.download_button("📥 Download Raw Materials Report (CSV)", rm_df.to_csv(index=False).encode('utf-8'), "raw_materials_report.csv", "text/csv")
+        if st.session_state.user_role == "Admin":
+            st.download_button("📥 Download Raw Materials Report (CSV)", rm_df.to_csv(index=False).encode('utf-8'), "raw_materials_report.csv", "text/csv")
 
-# --- TAB 4: OFFICIAL LETTERS & MEMOS (SECURE DIRECTORS ACCESS) ---
+# --- TAB 4: OFFICIAL LETTERS & MEMOS ---
 with tabs[3]:
     st.header("Official Letters, Inbound/Outbound Memos & Documents")
-    st.markdown("ආයතනයට ලැබෙන හෝ ආයතනයෙන් යවන නිල ලිපි සහ මීමොස් (Letters & Memos) ආරක්ෂිතව ගබඩා කර පරීක්ෂා කරන්න.")
-
     with st.form("letter_form"):
         col_l1, col_l2 = st.columns(2)
         with col_l1:
@@ -276,15 +277,12 @@ with tabs[3]:
         st.subheader("Registered Letters & Memos History")
         letters_df = pd.DataFrame(st.session_state.letters_logs)
         st.table(letters_df)
-        st.download_button("📥 Download Letters & Memos Report (CSV)", letters_df.to_csv(index=False).encode('utf-8'), "letters_memos_report.csv", "text/csv")
-    else:
-        st.info("No letters or memos recorded yet.")
+        if st.session_state.user_role == "Admin":
+            st.download_button("📥 Download Letters & Memos Report (CSV)", letters_df.to_csv(index=False).encode('utf-8'), "letters_memos_report.csv", "text/csv")
 
 # --- TAB 5: PROFESSIONAL INVOICE GENERATOR ---
 with tabs[4]:
     st.header("Official Invoice Generator (Tablets Quantity-wise)")
-    st.markdown("ඉන්වොයිස් අංකය **CCT-** යටතේ ඇතුළත් කර, බහු කෝපි වර්ග එකින් එක කාර්ට් එකට එකතු කරගත හැක.")
-
     col_inf1, col_inf2 = st.columns(2)
     with col_inf1:
         inv_no = st.text_input("Invoice Number", value="CCT-00012")
@@ -427,52 +425,91 @@ with tabs[4]:
 </html>"""
             
             st.markdown("---")
-            st.download_button(
-                label="📥 Download Official Invoice as HTML File (.html)",
-                data=invoice_html.encode('utf-8'),
-                file_name=f"{latest_order['Invoice No'].replace('/', '_')}.html",
-                mime="text/html"
-            )
-            
-            st.info("💡 **PDF ලෙස ලබා ගැනීමට:** ඉහත ඩවුන්ලෝඩ් කරගත් HTML ගොනුව ඔබගේ බ්‍රව්සරයෙන් විවෘත කර, **`Ctrl + P`** ඔබා **'Save as PDF'** තෝරාගෙන PDF එකක් ලෙස සේව් කරගන්න.")
+            if st.session_state.user_role == "Admin":
+                st.download_button(
+                    label="📥 Download Official Invoice as HTML File (.html)",
+                    data=invoice_html.encode('utf-8'),
+                    file_name=f"{latest_order['Invoice No'].replace('/', '_')}.html",
+                    mime="text/html"
+                )
+            else:
+                st.info("🔒 ඩවුන්ලෝඩ් කරගැනීමේ අවසරය ඇත්තේ ඇඩ්මින් (ක්‍රිශන් දමිත්) වෙත පමණි.")
 
-# --- TAB 6: DIRECTORS & ALL RECORDS ---
+# --- TAB 6: DIRECTORS & FILTERABLE RECORDS DASHBOARD ---
 with tabs[5]:
-    st.header("Directors' Management Report & All Orders History")
-    st.markdown("මාසිකව සහ දිනපතා නිකුත් කළ ටැබ්ලට් ප්‍රමාණයන් සහ ඇණවුම් වාර්තා මෙහි දැක්වේ.")
+    st.header("Directors' Filterable Records & Management Dashboard")
+    st.markdown("අධ්‍යක්ෂකවරුන්ට අවශ්‍ය වාර්තා වර්ගය තෝරා (Filter කර) නැරඹිය හැක. (ඩවුන්ලෝඩ් බලය ඇඩ්මින් සතුය)")
 
-    if st.session_state.orders:
-        total_orders_count = len(st.session_state.orders)
-        total_tablets_dispatched = sum([order["Total Tablets"] for order in st.session_state.orders])
-        total_revenue = sum([order["Grand Total (LKR)"] for order in st.session_state.orders])
+    report_category = st.selectbox("Select Report Category to View", [
+        "Lab & R&D Reports", 
+        "Raw Materials (RM-LOG)", 
+        "Official Letters & Memos", 
+        "Invoices & Dispatched Orders"
+    ])
 
-        m1, m2, m3 = st.columns(3)
-        m1.metric("Total Orders Dispatched", total_orders_count)
-        m2.metric("Total Tablets Dispatched", total_tablets_dispatched)
-        m3.metric("Total Revenue (LKR)", f"LKR {total_revenue:,.2f}")
+    st.markdown("---")
 
-        st.markdown("---")
-        st.subheader("Orders Ledger")
-        
-        display_orders = []
-        for ord_item in st.session_state.orders:
-            display_orders.append({
-                "Invoice No": ord_item["Invoice No"],
-                "Date/Time": ord_item["Date"],
-                "Customer": ord_item["Customer"],
-                "Type": ord_item["Type"],
-                "Total Tablets": ord_item["Total Tablets"],
-                "Grand Total (LKR)": f"{ord_item['Grand Total (LKR)']:,.2f}",
-                "Issued By": ord_item.get("Issued By", "N/A")
-            })
-        orders_df = pd.DataFrame(display_orders)
-        st.table(orders_df)
-        
-        st.download_button("📥 Download All Orders History Report (CSV)", orders_df.to_csv(index=False).encode('utf-8'), "all_orders_report.csv", "text/csv")
+    if report_category == "Lab & R&D Reports":
+        st.subheader("🧪 Lab & R&D Quality Control Records")
+        if st.session_state.rd_logs:
+            rd_df = pd.DataFrame(st.session_state.rd_logs)
+            st.table(rd_df)
+            if st.session_state.user_role == "Admin":
+                st.download_button("📥 Download Lab Reports (CSV)", rd_df.to_csv(index=False).encode('utf-8'), "lab_reports.csv", "text/csv")
+        else:
+            st.info("No Lab & R&D records found.")
 
-        if st.session_state.user_role == "Admin":
-            if st.button("Clear All Orders History"):
-                st.session_state.orders = []
-                st.rerun()
-    else:
-        st.info("No orders recorded yet. දත්ත ඇතුළත් කළ පසු මෙහි වාර්තා දිස්වේ.")
+    elif report_category == "Raw Materials (RM-LOG)":
+        st.subheader("📦 Raw Materials Inventory & Sourcing Records")
+        if st.session_state.rm_logs:
+            rm_df = pd.DataFrame(st.session_state.rm_logs)
+            st.table(rm_df)
+            if st.session_state.user_role == "Admin":
+                st.download_button("📥 Download Raw Materials Report (CSV)", rm_df.to_csv(index=False).encode('utf-8'), "raw_materials.csv", "text/csv")
+        else:
+            st.info("No Raw Materials records found.")
+
+    elif report_category == "Official Letters & Memos":
+        st.subheader("✉️ Official Letters & Memos Records")
+        if st.session_state.letters_logs:
+            letters_df = pd.DataFrame(st.session_state.letters_logs)
+            st.table(letters_df)
+            if st.session_state.user_role == "Admin":
+                st.download_button("📥 Download Letters Report (CSV)", letters_df.to_csv(index=False).encode('utf-8'), "letters_memos.csv", "text/csv")
+        else:
+            st.info("No letters or memos recorded.")
+
+    elif report_category == "Invoices & Dispatched Orders":
+        st.subheader("📄 Invoices & Dispatched Orders Ledger")
+        if st.session_state.orders:
+            total_orders_count = len(st.session_state.orders)
+            total_tablets_dispatched = sum([order["Total Tablets"] for order in st.session_state.orders])
+            total_revenue = sum([order["Grand Total (LKR)"] for order in st.session_state.orders])
+
+            m1, m2, m3 = st.columns(3)
+            m1.metric("Total Orders Dispatched", total_orders_count)
+            m2.metric("Total Tablets Dispatched", total_tablets_dispatched)
+            m3.metric("Total Revenue (LKR)", f"LKR {total_revenue:,.2f}")
+
+            st.markdown("---")
+            display_orders = []
+            for ord_item in st.session_state.orders:
+                display_orders.append({
+                    "Invoice No": ord_item["Invoice No"],
+                    "Date/Time": ord_item["Date"],
+                    "Customer": ord_item["Customer"],
+                    "Type": ord_item["Type"],
+                    "Total Tablets": ord_item["Total Tablets"],
+                    "Grand Total (LKR)": f"{ord_item['Grand Total (LKR)']:,.2f}",
+                    "Issued By": ord_item.get("Issued By", "N/A")
+                })
+            orders_df = pd.DataFrame(display_orders)
+            st.table(orders_df)
+            
+            if st.session_state.user_role == "Admin":
+                st.download_button("📥 Download All Invoices History (CSV)", orders_df.to_csv(index=False).encode('utf-8'), "invoices_history.csv", "text/csv")
+                if st.button("Clear All Orders History"):
+                    st.session_state.orders = []
+                    st.rerun()
+        else:
+            st.info("No invoices or orders recorded yet.")
