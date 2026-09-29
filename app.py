@@ -20,7 +20,7 @@ if 'current_user' not in st.session_state:
 if 'user_role' not in st.session_state:
     st.session_state.user_role = ""
 
-# Session State Initialization for Business Data & Empty Stock
+# Session State Initialization for Business Data & Stock
 if 'retail_price' not in st.session_state:
     st.session_state.retail_price = 50.00
 if 'trade_price' not in st.session_state:
@@ -134,12 +134,12 @@ if menu_selection == "🏠 Welcome & Overview":
         ### අපගේ සංකල්පය සහ නිෂ්පාදනය
         ශ්‍රී ලංකාවේ උසස්ම තත්වයේ අරාබිකා (Arabica) කෝපි බීජ මෙන්ම කුරුඳු (Cinnamon) සහ ඉඟුරු (Ginger) සාරය එකතු කරමින්, නවීන තාක්ෂණය යටතේ නිෂ්පාදනය කරනු ලබන **දියවන කෝපි ටැබ්ලට් (Soluble Coffee Tablets)** නිෂ්පාදනයේ ප්‍රමුඛයා වන්නේ **Ceylon Coffee Tablet (Pvt) Ltd** අප ආයතනයයි.
         
-        උණුසුම් ජලයට හෝ කිරිවලට පහසුවෙන් දියවන මෙම ටැබ්ලට් එකක ප්‍රමිතිය, නැවුම් බව සහ සුවඳ රැකගනිමින් දේශීය හා විදේශීය වෙළඳපොළ (උදා: ස්වීඩනය වැනි රටවල්) වෙත උසස්ම මට්ටමින් නිෂ්පාදන බෙදා හැරීම අපගේ අරමුණයි.
+        උණුසුම් ජලයට හෝ කිරිවලට පහසුවෙන් දියවන මෙම ටැබ්ලට් එකක ප්‍රමිතිය, නැවුම් බව සහ සුවඳ රැකගනිමින් දේශීය හා විදේශීය වෙළඳපොළ වෙත උසස්ම මට්ටමින් නිෂ්පාදන බෙදා හැරීම අපගේ අරමුණයි.
         """)
     with col_w2:
         st.info("""
         📌 **පද්ධතියේ ප්‍රධාන විශේෂාංග:**
-        - **PDF / Image අප්‌ලෝඩ් කර ස්කෑන් කිරීම:** ඔබේ පැරණි ලැබ් වාර්තා හෝ ලිපි PDF/Image ලෙස අප්‌ලෝඩ් කළ විට ඒවා ස්වයංක්‍රීයව හඳුනාගෙන ඩෑෂ්බෝඩ් එකට ඇතුළත් වේ.
+        - **PDF / Image අප්‌ලෝඩ් කිරීම:** ඔබේ ලැබ් වාර්තා හෝ ලිපි PDF/Image ලෙස අප්‌ලෝඩ් කර පහසුවෙන් ඩෑෂ්බෝඩ් එකට ඇතුළත් කළ හැක.
         - **ස්ටොක් කළමනාකරණය (Stores & Stock):** අමුද්‍රව්‍ය සහ නිමි ටැබ්ලට් ශේෂයන් ස්වයංක්‍රීයව යාවත්කාලීන වීම.
         - **ඩිරෙක්ටර්ස් ඩෑෂ්බෝඩ් (Directors Dashboard):** සියලුම වාර්තා ෆිල්ටර් කර ප්‍රින්ට් අවුට් ලබාගැනීම.
         
@@ -223,7 +223,7 @@ elif menu_selection == "📊 Cost & Pricing":
 # --- SECTION 2: BATCH PRODUCTION RECORD (BPR MASTER) ---
 elif menu_selection == "🏭 Batch Production (BPR)":
     st.header("Batch Production Record (BPR) Master System")
-    st.markdown("නිෂ්පාදන දිනය (Mfg Date) ඇතුළත් කළ විට බැච් අංකය (`CCTYYMMDD`) සහ කල් ඉකුත්වීමේ දිනය (මාස 8කින්) ස්වයංක්‍රීයව ජනනය වේ.")
+    st.markdown("නිෂ්පාදන දිනය (Mfg Date) ඇතුළත් කළ විට බැච් අංකය (`CCTYYMMDD`) සහ කල් ඉකුත්වීමේ දිනය ස්වයංක්‍රීයව ජනනය වේ.")
 
     with st.form("bpr_form"):
         st.subheader("1. Batch Identification & Metadata (Auto Generated)")
@@ -245,7 +245,7 @@ elif menu_selection == "🏭 Batch Production (BPR)":
         with c_test1:
             test_sample = st.selectbox("Sample No", ["S-01", "S-02", "S-03", "S-04", "S-05"])
         with c_test2:
-            dissolve_sec = st.number_input("Dissolve Time (seconds) [Target: 20-30s]", value=25)
+            dissolve_sec = st.number_input("Dissolve Time (seconds)", value=25)
         with c_test3:
             visual_check = st.selectbox("Visual Check Status", ["OK (Pass)", "Defect / Discolour / Delay"])
         with c_test4:
@@ -255,7 +255,7 @@ elif menu_selection == "🏭 Batch Production (BPR)":
         d1, d2 = st.columns(2)
         with d1:
             drying_method = st.selectbox("Drying Method", ["Cabinet (20-30m)", "Air Dry"])
-            moisture_content = st.number_input("Moisture Content (%) [Target < 3%]", value=2.5, step=0.1)
+            moisture_content = st.number_input("Moisture Content (%)", value=2.5, step=0.1)
             good_tablets = st.number_input("Good Tablets Count", value=145)
         with d2:
             rejected_tablets = st.number_input("Rejected / Crumbled Tablets", value=5)
@@ -284,7 +284,7 @@ elif menu_selection == "🏭 Batch Production (BPR)":
             if "Green Coffee Beans (Arabica)" in st.session_state.raw_stock:
                 st.session_state.raw_stock["Green Coffee Beans (Arabica)"] = max(0.0, st.session_state.raw_stock["Green Coffee Beans (Arabica)"] - raw_used_kg)
 
-            st.success(f"Batch {auto_batch_no} saved successfully! Tablet stock updated and raw materials deducted.")
+            st.success(f"Batch {auto_batch_no} saved successfully! Tablet stock updated.")
 
     if st.session_state.bpr_logs:
         st.subheader("Saved Batch Production Records (BPR Master)")
@@ -336,23 +336,22 @@ elif menu_selection == "📦 Stores & Stock":
             })
             st.success(f"Added {r_qty} of {r_item} to stores successfully!")
 
-# --- SECTION 4: LAB & R&D REPORTS (PDF / IMAGE SCAN & UPLOAD) ---
+# --- SECTION 4: LAB & R&D REPORTS (RELIABLE FILE UPLOAD & SAVE) ---
 elif menu_selection == "🧪 Lab & R&D Reports":
-    st.header("Lab & R&D Quality Control Reports (PDF / Image Scanner)")
-    st.markdown("ඔබගේ ලැබ් වාර්තා (PDF හෝ පින්තූර) මෙහි අප්‌ලෝඩ් කරන්න. පද්ධතිය මඟින් ඒවා ස්වයංක්‍රීයව හඳුනාගෙන සුරකිනු ඇත.")
+    st.header("Lab & R&D Quality Control Reports & Document Upload")
+    st.markdown("ඔබගේ ලැබ් වාර්තා (PDF හෝ පින්තූර) අප්‌ලෝඩ් කර විස්තර ඇතුළත් කර **Save R&D Report** ඔබන්න.")
 
-    # File Uploader outside form for reliable handling
+    # Reliable file uploader outside form or handled via session state
     uploaded_lab_file = st.file_uploader("Upload Lab Report (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="lab_file_uploader")
 
     default_batch = "CCT260929"
     if uploaded_lab_file is not None:
-        # Auto-extract batch number from uploaded file name if possible
         fname_clean = uploaded_lab_file.name.rsplit('.', 1)[0]
         if "CCT" in fname_clean.upper():
             default_batch = fname_clean.upper()
         else:
             default_batch = f"CCT-{fname_clean[:10]}"
-        st.success(f"📄 File '{uploaded_lab_file.name}' attached successfully! Details auto-filled below.")
+        st.info(f"📄 File attached: **{uploaded_lab_file.name}**")
 
     with st.form("rd_form"):
         col1, col2, col3 = st.columns(3)
@@ -363,23 +362,26 @@ elif menu_selection == "🧪 Lab & R&D Reports":
             mfg_date = st.date_input("Manufacture Date")
             coffee_wt = st.number_input("Coffee Weight (kg)", value=5.0)
         with col3:
-            moisture = st.number_input("Moisture Level (%) [Standard < 4.0%]", value=3.5, step=0.1)
+            moisture = st.number_input("Moisture Level (%)", value=3.5, step=0.1)
             qc_status = st.selectbox("Batch Status", ["APPROVED FOR RELEASE", "REJECTED / HOLD"])
 
         submitted_rd = st.form_submit_button("Save R&D Report")
         if submitted_rd:
-            file_name = uploaded_lab_file.name if uploaded_lab_file is not None else "No File Attached"
-            st.session_state.rd_logs.append({
-                "Batch No": batch_no,
-                "Variant": variant,
-                "Date": str(mfg_date),
-                "Coffee Weight (kg)": coffee_wt,
-                "Moisture": f"{moisture}%",
-                "Status": qc_status,
-                "Attached File": file_name,
-                "Recorded By": st.session_state.current_user
-            })
-            st.success(f"✅ Lab & R&D Report for Batch {batch_no} saved successfully with file: {file_name}!")
+            if batch_no:
+                file_name = uploaded_lab_file.name if uploaded_lab_file is not None else "No File Attached"
+                st.session_state.rd_logs.append({
+                    "Batch No": batch_no,
+                    "Variant": variant,
+                    "Date": str(mfg_date),
+                    "Coffee Weight (kg)": coffee_wt,
+                    "Moisture": f"{moisture}%",
+                    "Status": qc_status,
+                    "Attached File": file_name,
+                    "Recorded By": st.session_state.current_user
+                })
+                st.success(f"✅ Lab Report for Batch {batch_no} saved successfully and added to Directors Dashboard!")
+            else:
+                st.error("⚠️ කරුණාකර බැච් අංකය (Batch Number) ඇතුළත් කරන්න.")
 
     if st.session_state.rd_logs:
         st.subheader("Saved Lab & R&D Logs")
@@ -393,7 +395,7 @@ elif menu_selection == "🤝 Dealers Directory":
     st.header("Local & Foreign Dealers Directory (Secure Confidential)")
     
     if st.session_state.user_role == "Admin":
-        st.markdown("දේශීය සහ විදේශීය ඩීලර්වරුන්ගේ (උදා: Sweden ඩීලර්) විස්තර ආරක්ෂිතව ඇතුළත් කර සුරකින්න.")
+        st.markdown("දේශීය සහ විදේශීය ඩීලර්වරුන්ගේ විස්තර ආරක්ෂිතව ඇතුළත් කර සුරකින්න.")
         
         with st.form("dealer_form"):
             d_col1, d_col2 = st.columns(2)
@@ -421,7 +423,7 @@ elif menu_selection == "🤝 Dealers Directory":
                     "Address": dealer_address,
                     "Notes": dealer_notes
                 })
-                st.success("Dealer record saved securely!")
+                st.success("Dealer record saved successfully!")
 
         if st.session_state.dealers_logs:
             st.subheader("Saved Dealers Directory")
@@ -433,10 +435,10 @@ elif menu_selection == "🤝 Dealers Directory":
     else:
         st.error("🔒 රහස්‍යභාවය සුරක්ෂිත කිරීම සඳහා ඩීලර්ස් නාමාවලිය බැලීමේ සහ ඇතුළත් කිරීමේ පූර්ණ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
-# --- SECTION 6: LETTERS & MEMOS (PDF / IMAGE SCAN & UPLOAD) ---
+# --- SECTION 6: LETTERS & MEMOS (RELIABLE FILE UPLOAD & SAVE) ---
 elif menu_selection == "✉️ Letters & Memos":
     st.header("Official Letters, Inbound/Outbound Memos & Documents")
-    st.markdown("ලිපි හෝ මීමොවන්ගේ PDF හෝ පින්තූර (Images) මෙහි අප්‌ලෝඩ් කරන්න.")
+    st.markdown("ලිපි හෝ මීමොවන්ගේ PDF හෝ පින්තූර (Images) අප්‌ලෝඩ් කර විස්තර ඇතුළත් කරන්න.")
 
     uploaded_letter_file = st.file_uploader("Upload Letter Document (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="letter_file_uploader")
 
@@ -444,12 +446,12 @@ elif menu_selection == "✉️ Letters & Memos":
     if uploaded_letter_file is not None:
         fname_clean = uploaded_letter_file.name.rsplit('.', 1)[0]
         default_subject = fname_clean.replace("_", " ").title()
-        st.success(f"📄 Document '{uploaded_letter_file.name}' attached successfully!")
+        st.info(f"📄 Document attached: **{uploaded_letter_file.name}**")
 
     with st.form("letter_form"):
         col_l1, col_l2 = st.columns(2)
         with col_l1:
-            doc_type = st.selectbox("Document Type", ["Inbound Letter (ලැබුණු ලිපිය)", "Outbound Memo (යැවූ ලිපිය/මීමොව)", "Corporate Notice"])
+            doc_type = st.selectbox("Document Type", ["Inbound Letter (לැබුණු ලිපිය)", "Outbound Memo (යැවූ ලිපිය/මීමොව)", "Corporate Notice"])
             subject_title = st.text_input("Subject / Title (විෂය)", value=default_subject)
             sender_receiver = st.text_input("Sender / Recipient Name (අදාළ පාර්ශ්වය)")
         with col_l2:
@@ -459,17 +461,20 @@ elif menu_selection == "✉️ Letters & Memos":
         
         submitted_letter = st.form_submit_button("Save Official Document")
         if submitted_letter:
-            file_name = uploaded_letter_file.name if uploaded_letter_file is not None else "No File Attached"
-            st.session_state.letters_logs.append({
-                "Type": doc_type,
-                "Subject": subject_title,
-                "Party": sender_receiver,
-                "Date": str(doc_date),
-                "Notes": doc_notes,
-                "File": file_name,
-                "Managed By": st.session_state.current_user
-            })
-            st.success(f"✅ Official Document '{subject_title}' saved successfully with file: {file_name}!")
+            if subject_title:
+                file_name = uploaded_letter_file.name if uploaded_letter_file is not None else "No File Attached"
+                st.session_state.letters_logs.append({
+                    "Type": doc_type,
+                    "Subject": subject_title,
+                    "Party": sender_receiver,
+                    "Date": str(doc_date),
+                    "Notes": doc_notes,
+                    "File": file_name,
+                    "Managed By": st.session_state.current_user
+                })
+                st.success(f"✅ Official Document '{subject_title}' saved successfully and added to Directors Dashboard!")
+            else:
+                st.error("⚠️ කරුණාකර විෂය (Subject) ඇතුළත් කරන්න.")
 
     if st.session_state.letters_logs:
         st.subheader("Registered Letters & Memos History")
@@ -642,7 +647,7 @@ elif menu_selection == "📄 Invoice Generator":
 # --- SECTION 8: DIRECTORS DASHBOARD ---
 elif menu_selection == "📋 Directors Dashboard":
     st.header("Directors' Central Records & Master Dashboard")
-    st.markdown("සියලුම අංශවල (Batch Production, Lab Reports, Raw Materials, Letters, Invoices) වාර්තා මෙහි එකතු වී ඇත. ඔබට අවශ්‍ය වාර්තා වර්ගය සහ දිනය තෝරා **ප්‍රින්ට් අවුට් (Print) සඳහා ඩවුන්ලෝඩ්** කරගත හැක.")
+    st.markdown("සියලුම අංශවල වාර්තා මෙහි එකතු වී ඇත. ඔබට අවශ්‍ය වාර්තා වර්ගය සහ දිනය තෝරා **ප්‍රින්ට් අවුට් (Print) සඳහා ඩවුන්ලෝඩ්** කරගත හැක.")
 
     report_category = st.selectbox("Select Master Record Category to View & Print", [
         "Batch Production Records (BPR)",
@@ -675,7 +680,7 @@ elif menu_selection == "📋 Directors Dashboard":
                 mime="text/csv"
             )
         else:
-            st.info("No Batch Production records found yet.")
+            st.info("No Batch Production records found yet. Please save a batch record from the BPR section.")
 
     elif report_category == "Lab & R&D Reports":
         st.subheader("🧪 Lab & R&D Quality Control Records")
@@ -698,7 +703,7 @@ elif menu_selection == "📋 Directors Dashboard":
                 mime="text/csv"
             )
         else:
-            st.info("No Lab & R&D records found yet.")
+            st.info("No Lab & R&D records found yet. Please upload and save a lab report from the Lab & R&D section.")
 
     elif report_category == "Raw Materials (RM-LOG)":
         st.subheader("📦 Raw Materials Sourcing & Purchase Logs")
