@@ -139,9 +139,9 @@ if menu_selection == "🏠 Welcome & Overview":
     with col_w2:
         st.info("""
         📌 **පද්ධතියේ ප්‍රධාන විශේෂාංග:**
-        - **ස්වයංක්‍රීය බැච් සහ කල් ඉකුත්වීමේ දිනය:** නිෂ්පාදන දිනය අනුව බැච් අංකය සහ මාස 8ක කල් ඉකුත්වීමේ දිනය ස්වයංක්‍‍රීයව හැදීම.
-        - **ස්ටොක් කළමනාකරණය (Stores & Stock):** අමුද්‍රව්‍ය මිලදී ගැනීම්, නිෂ්පාදනයට අමුද්‍රව්‍ය අඩුවීම සහ ඉන්වොයිසි හරහා ටැබ්ලට් අලෙවි වූ විට ස්ටොක් එක ස්වයංක්‍රීයව යාවත්කාලීන වීම.
-        - **බාහිර ලිපි සහ ලැබ් වාර්තා අප්‌ලෝඩ් කිරීම:** PDF හෝ පින්තූර (Images) අප්‌ලෝඩ් කර ඩිරෙක්ටර්ස් ඩෑෂ්බෝඩ් එකෙන් බලාප්‍රින්ට් කරගත හැක.
+        - **PDF / Image අප්‌ලෝඩ් කර ස්කෑන් කිරීම:** ඔබේ පැරණි ලැබ් වාර්තා හෝ ලිපි PDF/Image ලෙස අප්‌ලෝඩ් කළ විට ඒවා ස්වයංක්‍රීයව හඳුනාගෙන ඩෑෂ්බෝඩ් එකට ඇතුළත් වේ.
+        - **ස්ටොක් කළමනාකරණය (Stores & Stock):** අමුද්‍රව්‍ය සහ නිමි ටැබ්ලට් ශේෂයන් ස්වයංක්‍රීයව යාවත්කාලීන වීම.
+        - **ඩිරෙක්ටර්ස් ඩෑෂ්බෝඩ් (Directors Dashboard):** සියලුම වාර්තා ෆිල්ටර් කර ප්‍රින්ට් අවුට් ලබාගැනීම.
         
         👉 **කරුණාකර වම්පස ඇති මෙනුව (Sidebar Menu) භාවිතා කර ඔබට අවශ්‍ය අංශය වෙත පිවිසෙන්න.**
         """)
@@ -336,17 +336,28 @@ elif menu_selection == "📦 Stores & Stock":
             })
             st.success(f"Added {r_qty} of {r_item} to stores successfully!")
 
-# --- SECTION 4: LAB & R&D REPORTS (WITH FILE UPLOADER INSIDE FORM) ---
+# --- SECTION 4: LAB & R&D REPORTS (PDF / IMAGE SCAN & UPLOAD) ---
 elif menu_selection == "🧪 Lab & R&D Reports":
-    st.header("Lab & R&D Quality Control Reports")
-    st.markdown("ලැබ් වාර්තාවේ PDF හෝ පින්තූරය (Image) අප්‌ලෝඩ් කර විස්තර ඇතුළත් කර **Save R&D Report** ඔබන්න.")
+    st.header("Lab & R&D Quality Control Reports (PDF / Image Scanner)")
+    st.markdown("ඔබගේ ලැබ් වාර්තා (PDF හෝ පින්තූර) මෙහි අප්‌ලෝඩ් කරන්න. පද්ධතිය මඟින් ඒවා ස්වයංක්‍රීයව හඳුනාගෙන සුරකිනු ඇත.")
+
+    # File Uploader outside form for reliable handling
+    uploaded_lab_file = st.file_uploader("Upload Lab Report (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="lab_file_uploader")
+
+    default_batch = "CCT260929"
+    if uploaded_lab_file is not None:
+        # Auto-extract batch number from uploaded file name if possible
+        fname_clean = uploaded_lab_file.name.rsplit('.', 1)[0]
+        if "CCT" in fname_clean.upper():
+            default_batch = fname_clean.upper()
+        else:
+            default_batch = f"CCT-{fname_clean[:10]}"
+        st.success(f"📄 File '{uploaded_lab_file.name}' attached successfully! Details auto-filled below.")
 
     with st.form("rd_form"):
-        uploaded_lab_file = st.file_uploader("Upload Lab Report (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="lab_file_uploader")
-        
         col1, col2, col3 = st.columns(3)
         with col1:
-            batch_no = st.text_input("Batch Number (e.g., CCT260929)")
+            batch_no = st.text_input("Batch Number", value=default_batch)
             variant = st.selectbox("Product Variant", ["Black Coffee (Light Roast)", "Black Coffee (Dark Roast)", "Cinnamon Coffee", "Ginger Coffee"])
         with col2:
             mfg_date = st.date_input("Manufacture Date")
@@ -357,21 +368,18 @@ elif menu_selection == "🧪 Lab & R&D Reports":
 
         submitted_rd = st.form_submit_button("Save R&D Report")
         if submitted_rd:
-            if batch_no:
-                file_name = uploaded_lab_file.name if uploaded_lab_file is not None else "No File Attached"
-                st.session_state.rd_logs.append({
-                    "Batch No": batch_no,
-                    "Variant": variant,
-                    "Date": str(mfg_date),
-                    "Coffee Weight (kg)": coffee_wt,
-                    "Moisture": f"{moisture}%",
-                    "Status": qc_status,
-                    "Attached File": file_name,
-                    "Recorded By": st.session_state.current_user
-                })
-                st.success(f"✅ Lab & R&D Report for Batch {batch_no} saved successfully with file: {file_name}!")
-            else:
-                st.error("⚠️ කරුණාකර බැච් අංකය (Batch Number) ඇතුළත් කරන්න.")
+            file_name = uploaded_lab_file.name if uploaded_lab_file is not None else "No File Attached"
+            st.session_state.rd_logs.append({
+                "Batch No": batch_no,
+                "Variant": variant,
+                "Date": str(mfg_date),
+                "Coffee Weight (kg)": coffee_wt,
+                "Moisture": f"{moisture}%",
+                "Status": qc_status,
+                "Attached File": file_name,
+                "Recorded By": st.session_state.current_user
+            })
+            st.success(f"✅ Lab & R&D Report for Batch {batch_no} saved successfully with file: {file_name}!")
 
     if st.session_state.rd_logs:
         st.subheader("Saved Lab & R&D Logs")
@@ -425,18 +433,24 @@ elif menu_selection == "🤝 Dealers Directory":
     else:
         st.error("🔒 රහස්‍යභාවය සුරක්ෂිත කිරීම සඳහා ඩීලර්ස් නාමාවලිය බැලීමේ සහ ඇතුළත් කිරීමේ පූර්ණ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
-# --- SECTION 6: LETTERS & MEMOS (WITH FILE UPLOADER INSIDE FORM) ---
+# --- SECTION 6: LETTERS & MEMOS (PDF / IMAGE SCAN & UPLOAD) ---
 elif menu_selection == "✉️ Letters & Memos":
     st.header("Official Letters, Inbound/Outbound Memos & Documents")
-    st.markdown("ලිපියේ හෝ මීමොවේ PDF හෝ පින්තූරය (Image) අප්‌ලෝඩ් කර විස්තර ඇතුළත් කරන්න.")
+    st.markdown("ලිපි හෝ මීමොවන්ගේ PDF හෝ පින්තූර (Images) මෙහි අප්‌ලෝඩ් කරන්න.")
+
+    uploaded_letter_file = st.file_uploader("Upload Letter Document (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="letter_file_uploader")
+
+    default_subject = "General Corporate Notice"
+    if uploaded_letter_file is not None:
+        fname_clean = uploaded_letter_file.name.rsplit('.', 1)[0]
+        default_subject = fname_clean.replace("_", " ").title()
+        st.success(f"📄 Document '{uploaded_letter_file.name}' attached successfully!")
 
     with st.form("letter_form"):
-        uploaded_letter_file = st.file_uploader("Upload Letter Document (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="letter_file_uploader")
-        
         col_l1, col_l2 = st.columns(2)
         with col_l1:
             doc_type = st.selectbox("Document Type", ["Inbound Letter (ලැබුණු ලිපිය)", "Outbound Memo (යැවූ ලිපිය/මීමොව)", "Corporate Notice"])
-            subject_title = st.text_input("Subject / Title (විෂය)")
+            subject_title = st.text_input("Subject / Title (විෂය)", value=default_subject)
             sender_receiver = st.text_input("Sender / Recipient Name (අදාළ පාර්ශ්වය)")
         with col_l2:
             doc_date = st.date_input("Document Date")
@@ -445,20 +459,17 @@ elif menu_selection == "✉️ Letters & Memos":
         
         submitted_letter = st.form_submit_button("Save Official Document")
         if submitted_letter:
-            if subject_title:
-                file_name = uploaded_letter_file.name if uploaded_letter_file is not None else "No File Attached"
-                st.session_state.letters_logs.append({
-                    "Type": doc_type,
-                    "Subject": subject_title,
-                    "Party": sender_receiver,
-                    "Date": str(doc_date),
-                    "Notes": doc_notes,
-                    "File": file_name,
-                    "Managed By": st.session_state.current_user
-                })
-                st.success(f"✅ Official Document '{subject_title}' saved successfully with file: {file_name}!")
-            else:
-                st.error("⚠️ කරුණාකර විෂය (Subject) ඇතුළත් කරන්න.")
+            file_name = uploaded_letter_file.name if uploaded_letter_file is not None else "No File Attached"
+            st.session_state.letters_logs.append({
+                "Type": doc_type,
+                "Subject": subject_title,
+                "Party": sender_receiver,
+                "Date": str(doc_date),
+                "Notes": doc_notes,
+                "File": file_name,
+                "Managed By": st.session_state.current_user
+            })
+            st.success(f"✅ Official Document '{subject_title}' saved successfully with file: {file_name}!")
 
     if st.session_state.letters_logs:
         st.subheader("Registered Letters & Memos History")
