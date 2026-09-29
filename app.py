@@ -1,6 +1,7 @@
 import streamlit as st
 from datetime import datetime
 import pandas as pd
+import base64
 
 st.set_page_config(page_title="Ceylon Coffee Tablets - Enterprise Portal", layout="wide")
 
@@ -150,7 +151,7 @@ with tabs[3]:
 
     col_inf1, col_inf2 = st.columns(2)
     with col_inf1:
-        inv_no = st.text_input("Invoice Number", value="CCT-")
+        inv_no = st.text_input("Invoice Number", value="CCT-00012")
         cust_name = st.text_input("Customer Name (Deliver To)", value="")
         cust_phone = st.text_input("Telephone Number", value="")
     with col_inf2:
@@ -212,7 +213,6 @@ with tabs[3]:
             st.success("Invoice generated and saved successfully!")
 
         if st.session_state.orders:
-            # Get the latest generated invoice for display & html download
             latest_order = st.session_state.orders[-1]
             
             cart_rows_html = ""
@@ -229,80 +229,76 @@ with tabs[3]:
 
             formatted_address = latest_order["Address"].replace(chr(10), '<br>') if latest_order["Address"] else "No Address Provided"
             
-            invoice_html = f"""
-            <!DOCTYPE html>
-            <html>
-            <head><meta charset="utf-8"><title>Invoice {latest_order['Invoice No']}</title></head>
-            <body style="font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 20px;">
-            <div style="max-width: 800px; margin: auto; border: 2px solid #5a3825; padding: 25px; border-radius: 8px; background-color: #ffffff; color: #000000;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #5a3825; padding-bottom: 15px;">
-                    <div>
-                        <h2 style="margin: 0; color: #5a3825; font-size: 22px;">CEYLON COFFEE TABLETS (PVT) LTD</h2>
-                        <p style="margin: 3px 0; font-size: 12px; color: #555;">No 173, Hepana, Pilimathalawa<br>TP: +94 76 367 6856</p>
-                    </div>
-                    <div style="text-align: right;">
-                        <h1 style="margin: 0; color: #5a3825; font-size: 26px; letter-spacing: 2px;">INVOICE</h1>
-                        <p style="margin: 5px 0; font-size: 13px;"><b>Invoice No:</b> {latest_order['Invoice No']}<br><b>Date:</b> {latest_order['Date']}</p>
-                    </div>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; margin-top: 20px; gap: 20px;">
-                    <div style="flex: 1; border: 1px solid #c8b198; padding: 12px; border-radius: 5px; background-color: #fdfbf7;">
-                        <p style="margin: 0 0 5px 0; font-size: 11px; color: #8c6239; font-weight: bold;">DELIVER TO</p>
-                        <p style="margin: 0; font-size: 13px; line-height: 1.4;"><b>{latest_order['Customer']}</b><br>{formatted_address}<br>TP: {latest_order['Phone']}</p>
-                    </div>
-                    <div style="flex: 1; border: 1px solid #bce8f1; padding: 12px; border-radius: 5px; background-color: #f4f8fb;">
-                        <p style="margin: 0 0 5px 0; font-size: 11px; color: #31708f; font-weight: bold;">BANK DETAILS FOR PAYMENT</p>
-                        <p style="margin: 0; font-size: 12px; line-height: 1.4;"><b>Account Name:</b> CEYLON COFFEE TABLET (PVT) LTD<br><b>Account Number:</b> 141010054345<br><b>Bank:</b> Hatton National Bank (HNB)<br><b>Branch:</b> Pilimathalawa</p>
-                    </div>
-                </div>
-                
-                <table style="width: 100%; margin-top: 25px; border-collapse: collapse;">
-                    <thead>
-                        <tr style="background-color: #5a3825; color: #ffffff; font-size: 13px;">
-                            <th style="padding: 10px; text-align: center; width: 10%;">SUB</th>
-                            <th style="padding: 10px; text-align: left; width: 50%;">ITEM DESCRIPTION</th>
-                            <th style="padding: 10px; text-align: center; width: 10%;">QTY</th>
-                            <th style="padding: 10px; text-align: right; width: 15%;">UNIT PRICE (LKR)</th>
-                            <th style="padding: 10px; text-align: right; width: 15%;">TOTAL (LKR)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {cart_rows_html}
-                    </tbody>
-                </table>
-                
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px;">
-                    <div style="border: 1px dashed #b5835a; padding: 8px 12px; border-radius: 4px; font-size: 12px; color: #5a3825; background-color: #faf4ed;">
-                        Note: + Delivery Fee | Category: {latest_order['Type']}
-                    </div>
-                    <div style="border: 2px solid #5a3825; padding: 12px 25px; border-radius: 6px; text-align: right; background-color: #fff;">
-                        <p style="margin: 0; font-size: 11px; color: #666; font-weight: bold;">TOTAL AMOUNT</p>
-                        <h2 style="margin: 5px 0 0 0; color: #5a3825; font-size: 22px;">{latest_order['Grand Total (LKR)']:,.2f} LKR</h2>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 35px; border: 1px solid #e0d0c0; background-color: #faf6f0; padding: 12px; text-align: center; border-radius: 5px;">
-                    <p style="margin: 0; color: #5a3825; font-weight: bold; font-size: 14px;">Thank you for your Order!</p>
-                    <p style="margin: 3px 0 0 0; font-size: 11px; color: #666;">Ceylon Coffee Tablets (Pvt) Ltd — Quality Sri Lankan Specialty Coffee Products</p>
-                </div>
-            </div>
-            </body>
-            </html>
-            """
+            invoice_html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Invoice {latest_order['Invoice No']}</title></head>
+<body style="font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 20px;">
+<div style="max-width: 800px; margin: auto; border: 2px solid #5a3825; padding: 25px; border-radius: 8px; background-color: #ffffff; color: #000000;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #5a3825; padding-bottom: 15px;">
+        <div>
+            <h2 style="margin: 0; color: #5a3825; font-size: 22px;">CEYLON COFFEE TABLETS (PVT) LTD</h2>
+            <p style="margin: 3px 0; font-size: 12px; color: #555;">No 173, Hepana, Pilimathalawa<br>TP: +94 76 367 6856</p>
+        </div>
+        <div style="text-align: right;">
+            <h1 style="margin: 0; color: #5a3825; font-size: 26px; letter-spacing: 2px;">INVOICE</h1>
+            <p style="margin: 5px 0; font-size: 13px;"><b>Invoice No:</b> {latest_order['Invoice No']}<br><b>Date:</b> {latest_order['Date']}</p>
+        </div>
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; margin-top: 20px; gap: 20px;">
+        <div style="flex: 1; border: 1px solid #c8b198; padding: 12px; border-radius: 5px; background-color: #fdfbf7;">
+            <p style="margin: 0 0 5px 0; font-size: 11px; color: #8c6239; font-weight: bold;">DELIVER TO</p>
+            <p style="margin: 0; font-size: 13px; line-height: 1.4;"><b>{latest_order['Customer']}</b><br>{formatted_address}<br>TP: {latest_order['Phone']}</p>
+        </div>
+        <div style="flex: 1; border: 1px solid #bce8f1; padding: 12px; border-radius: 5px; background-color: #f4f8fb;">
+            <p style="margin: 0 0 5px 0; font-size: 11px; color: #31708f; font-weight: bold;">BANK DETAILS FOR PAYMENT</p>
+            <p style="margin: 0; font-size: 12px; line-height: 1.4;"><b>Account Name:</b> CEYLON COFFEE TABLET (PVT) LTD<br><b>Account Number:</b> 141010054345<br><b>Bank:</b> Hatton National Bank (HNB)<br><b>Branch:</b> Pilimathalawa</p>
+        </div>
+    </div>
+    
+    <table style="width: 100%; margin-top: 25px; border-collapse: collapse;">
+        <thead>
+            <tr style="background-color: #5a3825; color: #ffffff; font-size: 13px;">
+                <th style="padding: 10px; text-align: center; width: 10%;">SUB</th>
+                <th style="padding: 10px; text-align: left; width: 50%;">ITEM DESCRIPTION</th>
+                <th style="padding: 10px; text-align: center; width: 10%;">QTY</th>
+                <th style="padding: 10px; text-align: right; width: 15%;">UNIT PRICE (LKR)</th>
+                <th style="padding: 10px; text-align: right; width: 15%;">TOTAL (LKR)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {cart_rows_html}
+        </tbody>
+    </table>
+    
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px;">
+        <div style="border: 1px dashed #b5835a; padding: 8px 12px; border-radius: 4px; font-size: 12px; color: #5a3825; background-color: #faf4ed;">
+            Note: + Delivery Fee | Category: {latest_order['Type']}
+        </div>
+        <div style="border: 2px solid #5a3825; padding: 12px 25px; border-radius: 6px; text-align: right; background-color: #fff;">
+            <p style="margin: 0; font-size: 11px; color: #666; font-weight: bold;">TOTAL AMOUNT</p>
+            <h2 style="margin: 5px 0 0 0; color: #5a3825; font-size: 22px;">{latest_order['Grand Total (LKR)']:,.2f} LKR</h2>
+        </div>
+    </div>
+    
+    <div style="margin-top: 35px; border: 1px solid #e0d0c0; background-color: #faf6f0; padding: 12px; text-align: center; border-radius: 5px;">
+        <p style="margin: 0; color: #5a3825; font-weight: bold; font-size: 14px;">Thank you for your Order!</p>
+        <p style="margin: 3px 0 0 0; font-size: 11px; color: #666;">Ceylon Coffee Tablets (Pvt) Ltd — Quality Sri Lankan Specialty Coffee Products</p>
+    </div>
+</div>
+</body>
+</html>"""
             
-            st.markdown(invoice_html, unsafe_allow_html=True)
+            # HTML ගොනුව සෘජුවම බ්‍රව්සරයේ දෝෂයකින් තොරව පෙන්වීම සඳහා iframe වෙනුවට ඩවුන්ලෝඩ් ලින්ක් එක භාවිත කෙරේ.
             st.markdown("---")
-            
-            # HTML File Download Button
             st.download_button(
-                label="📥 Download Invoice as HTML File (.html)",
+                label="📥 Download Official Invoice as HTML File (.html)",
                 data=invoice_html.encode('utf-8'),
                 file_name=f"{latest_order['Invoice No'].replace('/', '_')}.html",
                 mime="text/html"
             )
             
-            st.info("💡 **PDF ලෙස ලබා ගැනීමට:** ඉහත දැක්වෙන ඉන්වොයිසිය මත සිට ඔබේ කීබෝඩ් එකෙන් **`Ctrl + P`** (Windows) හෝ **වලින් **`Cmd + P`** (Mac) ඔබා, Destination එක **'Save as PDF'** ලෙස තෝරාගෙන පහසුවෙන් PDF එකක් ලෙස ඩවුන්ලෝඩ් කරගන්න.")
+            st.info("💡 **PDF ලෙස ලබා ගැනීමට:** ඉහත ඩවුන්ලෝඩ් කරගත් HTML ගොනුව ඔබගේ පරිගණකයේ හෝ දුරකථනයේ බ්‍රව්සරයෙන් විවෘත කර, **`Ctrl + P`** (හෝ Print) ඔබා **'Save as PDF'** තෝරාගෙන පහසුවෙන් PDF එකක් කරගන්න.")
 
 # --- TAB 5: DIRECTORS & ALL RECORDS ---
 with tabs[4]:
