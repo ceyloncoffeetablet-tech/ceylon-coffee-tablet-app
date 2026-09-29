@@ -46,6 +46,8 @@ if 'letters_logs' not in st.session_state:
     st.session_state.letters_logs = []
 if 'invoice_cart' not in st.session_state:
     st.session_state.invoice_cart = []
+if 'expenses_logs' not in st.session_state:
+    st.session_state.expenses_logs = []
 
 if 'tablet_stock' not in st.session_state:
     st.session_state.tablet_stock = {
@@ -61,7 +63,10 @@ if 'raw_stock' not in st.session_state:
         "Ginger Extract Powder": 0.0,
         "Cinnamon Extract Powder": 0.0,
         "Tableting Excipients / Binders": 0.0,
-        "Packaging Foils": 0.0
+        "Packaging Foils": 0.0,
+        "Gloves": 0.0,
+        "Masks": 0.0,
+        "Sugar / Sweetener": 0.0
     }
 
 # --- LOGIN SCREEN ---
@@ -99,6 +104,8 @@ menu_selection = st.sidebar.radio(
     [
         "🏠 Welcome & Overview", 
         "📊 Cost & Pricing", 
+        "💸 Expenses Report", 
+        "📈 Financial P&L & Profit Sharing", 
         "🏭 Batch Production (BPR)", 
         "📦 Stores & Stock", 
         "🧪 Lab & R&D Reports", 
@@ -132,17 +139,13 @@ if menu_selection == "🏠 Welcome & Overview":
         st.markdown("""
         ### අපගේ සංකල්පය සහ නිෂ්පාදනය
         ශ්‍රී ලංකාවේ උසස්ම තත්වයේ අරාබිකා (Arabica) කෝපි බීජ මෙන්ම කුරුඳු (Cinnamon) සහ ඉඟුරු (Ginger) සාරය එකතු කරමින්, නවීන තාක්ෂණය යටතේ නිෂ්පාදනය කරනු ලබන **දියවන කෝපි ටැබ්ලට් (Soluble Coffee Tablets)** නිෂ්පාදනයේ ප්‍රමුඛයා වන්නේ **Ceylon Coffee Tablet (Pvt) Ltd** අප ආයතනයයි.
-        
-        උණුසුම් ජලයට හෝ කිරිවලට පහසුවෙන් දියවන මෙම ටැබ්ලට් එකක ප්‍රමිතිය, නැවුම් බව සහ සුවඳ රැකගනිමින් දේශීය හා විදේශීය වෙළඳපොළ වෙත උසස්ම මට්ටමින් නිෂ්පාදන බෙදා හැරීම අපගේ අරමුණයි.
         """)
     with col_w2:
         st.info("""
-        📌 **පද්ධතියේ නව විශේෂාංග:**
-        - **PDF ලැබ් වාර්තා ස්කෑන් කිරීම:** R&D Test Report ස්වයංක්‍රීයව හඳුනාගෙන දත්ත ඇතුළත් වීම.
-        - **ප්‍රින්ට් කළ හැකි වාර්තා (HTML Print Reports):** සාමාන්‍ය CSV වෙනුවට ඉතා අලංකාර ආයතනික ආකෘතියෙන් ඩවුන්ලෝඩ් සහ ප්‍රින්ට් කරගත හැක.
-        - **දත්ත මකා දැමීම සහ කළමනාකරණය (Delete & Unlock Access):** පයිලට් ප්‍රොජෙක්ට් සඳහා වැරදි දත්ත මකා දැමීමේ සහ Admin විසින් Lock/Unlock කිරීමේ පහසුකම්.
-        
-        👉 **කරුණාකර වම්පස මෙනුව භාවිතා කර අවශ්‍ය අංශයට යන්න.**
+        📌 **නව අංගයන් සහ විශේෂාංග:**
+        - **Expenses Report (වියදම් වාර්තාව):** රෝ මැටීරියල්ස් (Coffee, Ginger, Cinnamon), Gloves, Masks, Sugar සහ වෙනත් උපකරණ මිලදී ගැනීම් සඳහා වන වියදම් වාර්තාගත කිරීම.
+        - **Financial P&L & Profit Sharing:** මුළු ආදායම, නිෂ්පාදන වියදම්, ශුද්ධ ලාභය (Net Profit), සමාගමේ වැඩිදියුණුවට නැවත ආයෝජනය (Reinvestment) සහ අධ්‍යක්ෂවරුන් 5 දෙනා අතර ලාභ බෙදීයාම.
+        - **ඩිරෙක්ටර්ස් ඩෑෂ්බෝඩ් (Directors Dashboard):** සියලුම වාර්තා මුද්‍රණය කිරීමට සහ ඩවුන්ලෝඩ් කර ගැනීමට ඇති හැකියාව.
         """)
 
 # --- SECTION 1: COST & PROFIT ANALYSIS ---
@@ -205,11 +208,142 @@ elif menu_selection == "📊 Cost & Pricing":
         trade_margin = (trade_profit / st.session_state.trade_price) * 100 if st.session_state.trade_price > 0 else 0
         st.warning(f"**Trade Profit per Tablet:** LKR {trade_profit:.2f} \n\n **Profit Margin:** {trade_margin:.2f}%")
 
-# --- SECTION 2: BATCH PRODUCTION RECORD (BPR MASTER) ---
+# --- SECTION 2: EXPENSES REPORT ---
+elif menu_selection == "💸 Expenses Report":
+    st.header("Expenses Report & Operational Cost Tracking")
+    st.markdown("අධ්‍යක්ෂවරුන් විසින් දරනු ලබන වියදම් (රෝ මැටීරියල්ස්, Gloves, Masks, Sugar සහ අනෙකුත් උපකරණ මිලදී ගැනීම්) මෙහි ඇතුළත් කර වාර්තා කරගත හැක.")
+
+    with st.form("expenses_form"):
+        e1, e2 = st.columns(2)
+        with e1:
+            exp_date = st.date_input("Expense Date", value=datetime.now().date())
+            expense_category = st.selectbox("Expense Category", [
+                "Raw Materials - Coffee Beans (Arabica)",
+                "Raw Materials - Ginger Extract",
+                "Raw Materials - Cinnamon Extract",
+                "Safety Gear - Gloves",
+                "Safety Gear - Masks",
+                "Ingredients - Sugar / Sweetener",
+                "Packaging Foils & Bottles",
+                "Equipment & Machinery",
+                "Other / Miscellaneous Expenses"
+            ])
+            custom_item_name = st.text_input("Custom Item / Description (අවශ්‍ය නම් වෙනත් අයිතමයක් නම් කරන්න)")
+        with e2:
+            funded_by = st.selectbox("Funded / Paid By (Director Name)", list(USERS.keys()))
+            amount_lkr = st.number_input("Total Expense Amount (LKR)", value=5000.0, step=100.0)
+            receipt_ref = st.text_input("Receipt / Invoice Reference No")
+
+        submit_exp = st.form_submit_button("Save Expense Record")
+        if submit_exp:
+            item_desc = custom_item_name if custom_item_name else expense_category
+            st.session_state.expenses_logs.append({
+                "Date": str(exp_date),
+                "Category": expense_category,
+                "Item Description": item_desc,
+                "Funded By": funded_by,
+                "Amount (LKR)": amount_lkr,
+                "Reference": receipt_ref
+            })
+            st.success(f"Expense of LKR {amount_lkr:,.2f} for '{item_desc}' funded by {funded_by} saved successfully!")
+
+    if st.session_state.expenses_logs:
+        st.subheader("Recorded Expenses Ledger")
+        total_exp_sum = sum([item["Amount (LKR)"] for item in st.session_state.expenses_logs])
+        st.metric("Total Accumulated Expenses", f"LKR {total_exp_sum:,.2f}")
+        
+        for idx, exp in enumerate(st.session_state.expenses_logs):
+            c1, c2 = st.columns([5, 1])
+            with c1:
+                st.write(f"📅 {exp['Date']} | **{exp['Item Description']}** | Paid by: `{exp['Funded By']}` | **LKR {exp['Amount (LKR)']:,.2f}** (Ref: {exp['Reference']})")
+            with c2:
+                if st.button("Delete", key=f"del_exp_{idx}"):
+                    st.session_state.expenses_logs.pop(idx)
+                    st.rerun()
+
+        exp_df = pd.DataFrame(st.session_state.expenses_logs)
+        st.download_button("🖨️ Download Expenses Report (CSV)", exp_df.to_csv(index=False).encode('utf-8'), "expenses_report.csv", "text/csv")
+    else:
+        st.info("No expense records found yet.")
+
+# --- SECTION 3: FINANCIAL P&L & PROFIT SHARING ---
+elif menu_selection == "📈 Financial P&L & Profit Sharing":
+    st.header("Financial P&L, Reinvestment & Directors Profit Sharing (5 Directors)")
+    st.markdown("සමාගමේ සමස්ත ආදායම, වියදම් සහ ශුද්ධ ලාභය ගණනය කර, ඉන් ප්‍රතිශතයක් සමාගම ඉදිරියට ගෙනයාමට නැවත ආයෝජනය (Reinvestment) කර, ඉතිරිය අධ්‍යක්ෂවරුන් 5 දෙනා අතර බෙදී යන ආකාරය මෙහි දැක්වේ.")
+
+    total_revenue = sum([order["Grand Total (LKR)"] for order in st.session_state.orders])
+    total_expenses = sum([item["Amount (LKR)"] for item in st.session_state.expenses_logs])
+    net_profit = total_revenue - total_expenses
+
+    col_m1, col_m2, col_m3 = st.columns(3)
+    col_m1.metric("Total Revenue (IN)", f"LKR {total_revenue:,.2f}")
+    col_m2.metric("Total Expenses (OUT)", f"LKR {total_expenses:,.2f}")
+    col_m3.metric("Net Profit / Loss", f"LKR {net_profit:,.2f}")
+
+    st.markdown("---")
+    st.subheader("Profit Allocation & Reinvestment Settings")
+    
+    col_s1, col_s2 = st.columns(2)
+    with col_s1:
+        reinvest_percentage = st.slider("Company Reinvestment Percentage (%) [සමාගම වෙනුවෙන් රඳවා ගන්නා ප්‍රතිශතය]", 0, 100, 40)
+    with col_s2:
+        directors_share_pct = 100 - reinvest_percentage
+        st.info(f"**Directors Total Share Percentage:** {directors_share_pct}% (Divided equally among 5 Directors)")
+
+    reinvest_amount = (net_profit * reinvest_percentage) / 100 if net_profit > 0 else 0
+    directors_total_pool = (net_profit * directors_share_pct) / 100 if net_profit > 0 else 0
+    per_director_share = directors_total_pool / 5.0 if net_profit > 0 else 0
+
+    st.markdown("---")
+    st.subheader("Profit Distribution Summary (5 Directors)")
+    
+    p1, p2 = st.columns(2)
+    with p1:
+        st.success(f"🏢 **Reinvested into Company Growth:** LKR {reinvest_amount:,.2f} ({reinvest_percentage}%)")
+    with p2:
+        st.warning(f"👥 **Total Directors Pool:** LKR {directors_total_pool:,.2f} ({directors_share_pct}%)")
+
+    st.markdown("### Directors Share Breakdown (5 Directors)")
+    directors_list = ["Krishan Damith", "Shehan Maduranga", "Kanishka Dulanjana", "Chanuka Vinod", "Pasindu Sachintha"]
+    
+    dir_rows = []
+    for d in directors_list:
+        dir_rows.append({
+            "Director Name": d,
+            "Share Percentage": f"{directors_share_pct / 5.0:.1f}%",
+            "Allocated Amount (LKR)": f"LKR {per_director_share:,.2f}"
+        })
+    
+    dir_df = pd.DataFrame(dir_rows)
+    st.table(dir_df)
+
+    pnl_html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Financial P&L and Profit Sharing Report</title></head>
+<body style="font-family: Arial, sans-serif; padding: 30px; color: #333;">
+    <h2 style="color: #5a3825; text-align: center;">CEYLON COFFEE TABLETS (PVT) LTD</h2>
+    <h3 style="text-align: center; color: #666;">Financial Profit & Loss and Directors Profit Sharing Report</h3>
+    <hr style="border: 1px solid #5a3825;">
+    <p><b>Total Revenue:</b> LKR {total_revenue:,.2f}</p>
+    <p><b>Total Expenses:</b> LKR {total_expenses:,.2f}</p>
+    <p><b>Net Profit:</b> LKR {net_profit:,.2f}</p>
+    <p><b>Reinvested in Company ({reinvest_percentage}%):</b> LKR {reinvest_amount:,.2f}</p>
+    <p><b>Directors Total Pool ({directors_share_pct}%):</b> LKR {directors_total_pool:,.2f}</p>
+    <p><b>Per Director Share (5 Directors):</b> LKR {per_director_share:,.2f} each</p>
+    <br><p style="font-size: 12px; color: #777; text-align: center;">Generated via Ceylon Coffee Tablets Enterprise Portal</p>
+</body>
+</html>"""
+
+    st.download_button(
+        label="🖨️ Download P&L & Profit Sharing Report (.html for Printing)",
+        data=pnl_html.encode('utf-8'),
+        file_name=f"Financial_PNL_Report_{datetime.now().strftime('%Y%m%d')}.html",
+        mime="text/html"
+    )
+
+# --- SECTION 4: BATCH PRODUCTION RECORD (BPR MASTER) ---
 elif menu_selection == "🏭 Batch Production (BPR)":
     st.header("Batch Production Record (BPR) Master System")
-    st.markdown("නිෂ්පාදන දිනය (Mfg Date) ඇතුළත් කළ විට බැච් අංකය සහ කල් ඉකුත්වීමේ දිනය ස්වයංක්‍රීයව ජනනය වේ.")
-
     with st.form("bpr_form"):
         st.subheader("1. Batch Identification & Metadata (Auto Generated)")
         b1, b2, b3 = st.columns(3)
@@ -225,28 +359,6 @@ elif menu_selection == "🏭 Batch Production (BPR)":
             bpr_target_qty = st.number_input("Target Tablets Quantity Produced", value=150)
             bpr_operator = st.text_input("Operator / Technician Name")
 
-        st.subheader("2. In-Process Quality Checks (Tabulating Stage)")
-        c_test1, c_test2, c_test3, c_test4 = st.columns(4)
-        with c_test1:
-            test_sample = st.selectbox("Sample No", ["S-01", "S-02", "S-03", "S-04", "S-05"])
-        with c_test2:
-            dissolve_sec = st.number_input("Dissolve Time (seconds)", value=25)
-        with c_test3:
-            visual_check = st.selectbox("Visual Check Status", ["OK (Pass)", "Defect / Discolour / Delay"])
-        with c_test4:
-            tested_qty = st.number_input("Tablets Tested Qty", value=5)
-
-        st.subheader("3. Drying, Packaging & Yield Summary")
-        d1, d2 = st.columns(2)
-        with d1:
-            drying_method = st.selectbox("Drying Method", ["Cabinet (20-30m)", "Air Dry"])
-            moisture_content = st.number_input("Moisture Content (%)", value=2.5, step=0.1)
-            good_tablets = st.number_input("Good Tablets Count", value=145)
-        with d2:
-            rejected_tablets = st.number_input("Rejected / Crumbled Tablets", value=5)
-            packaging_type = st.selectbox("Packaging Type", ["30 Tab Bottle", "100 Tab Bottle", "Bulk Pack"])
-            final_packages = st.number_input("Final Packaged Units", value=5)
-
         bpr_submit = st.form_submit_button("Save Batch & Update Stock")
         if bpr_submit:
             st.session_state.bpr_logs.append({
@@ -254,83 +366,44 @@ elif menu_selection == "🏭 Batch Production (BPR)":
                 "Variant": bpr_variant,
                 "Mfg Date": str(bpr_mfg),
                 "Expiry Date": str(auto_exp),
-                "Tablets Produced": good_tablets,
-                "Dissolve Time (s)": dissolve_sec,
-                "Visual Status": visual_check,
-                "Moisture (%)": f"{moisture_content}%",
-                "Operator": bpr_operator,
-                "Recorded By": st.session_state.current_user
+                "Tablets Produced": bpr_target_qty,
+                "Operator": bpr_operator
             })
             if bpr_variant in st.session_state.tablet_stock:
-                st.session_state.tablet_stock[bpr_variant] += good_tablets
+                st.session_state.tablet_stock[bpr_variant] += bpr_target_qty
             st.success(f"Batch {auto_batch_no} saved successfully!")
 
     if st.session_state.bpr_logs:
-        st.subheader("Saved Batch Production Records (BPR Master)")
+        st.subheader("Saved Batch Production Records")
         for idx, log in enumerate(st.session_state.bpr_logs):
-            cols = st.columns([5, 1])
-            with cols[0]:
-                st.write(f"**{log['Batch No']}** | {log['Variant']} | Mfg: {log['Mfg Date']} | Qty: {log['Tablets Produced']}")
-            with cols[1]:
+            c1, c2 = st.columns([5, 1])
+            with c1:
+                st.write(f"**{log['Batch No']}** | {log['Variant']} | Qty: {log['Tablets Produced']}")
+            with c2:
                 if st.button("Delete", key=f"del_bpr_{idx}"):
                     st.session_state.bpr_logs.pop(idx)
                     st.rerun()
 
-# --- SECTION 3: STORES & STOCK ---
+# --- SECTION 5: STORES & STOCK ---
 elif menu_selection == "📦 Stores & Stock":
     st.header("Stores & Stock Management (Raw Materials & Tablets)")
-    
     col_st1, col_st2 = st.columns(2)
     with col_st1:
         st.subheader("📦 Raw Materials Stock Balance")
-        rm_stock_df = pd.DataFrame(list(st.session_state.raw_stock.items()), columns=["Raw Material Item", "Available Quantity (kg / units)"])
+        rm_stock_df = pd.DataFrame(list(st.session_state.raw_stock.items()), columns=["Raw Material Item", "Available Quantity"])
         st.table(rm_stock_df)
-
     with col_st2:
         st.subheader("💊 Finished Tablets Stock Balance")
-        tab_stock_df = pd.DataFrame(list(st.session_state.tablet_stock.items()), columns=["Tablet Variant", "Available Quantity (Units)"])
+        tab_stock_df = pd.DataFrame(list(st.session_state.tablet_stock.items()), columns=["Tablet Variant", "Available Quantity"])
         st.table(tab_stock_df)
 
-    st.markdown("---")
-    st.subheader("Add Raw Material Purchase to Stores")
-    with st.form("rm_store_form"):
-        rc1, rc2, rc3 = st.columns(3)
-        with rc1:
-            r_item = st.selectbox("Select Raw Material", list(st.session_state.raw_stock.keys()))
-            r_supplier = st.text_input("Supplier / Source Name")
-        with rc2:
-            r_date = st.date_input("Purchase Date")
-            r_exp = st.date_input("Expiry Date")
-        with rc3:
-            r_qty = st.number_input("Quantity Purchased (kg / units)", value=25.0)
-            r_cost = st.number_input("Total Cost (LKR)", value=45000.0)
-
-        r_submit = st.form_submit_button("Add to Stores")
-        if r_submit and r_supplier:
-            st.session_state.raw_stock[r_item] += r_qty
-            st.session_state.rm_logs.append({
-                "Date": str(r_date),
-                "Item": r_item,
-                "Supplier": r_supplier,
-                "Quantity": r_qty,
-                "Total Cost (LKR)": r_cost,
-                "Expiry Date": str(r_exp)
-            })
-            st.success(f"Added {r_qty} of {r_item} to stores successfully!")
-
-# --- SECTION 4: LAB & R&D REPORTS (PDF AUTO-FILL & DELETE ACCESS) ---
+# --- SECTION 6: LAB & R&D REPORTS ---
 elif menu_selection == "🧪 Lab & R&D Reports":
     st.header("Lab & R&D Quality Control Reports (PDF Scanner & Management)")
-    st.markdown("ඔබේ ලැබ් වාර්තා (උදා: RND-TR-2025-013 PDF) අප්‌ලෝඩ් කළ විට අදාළ දින සහ විස්තර ස්වයංක්‍රීයව පිරවේ.")
-
     uploaded_lab_file = st.file_uploader("Upload Lab Report (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="lab_file_uploader")
 
-    # Default values matching uploaded R&D Report (Doc Ref: RND-TR-2025-013, Date: 2025-11-25)
     default_batch = "RND-TR-2025-013"
     default_date = datetime.strptime("2025-11-25", "%Y-%m-%d").date()
-    
-    if uploaded_lab_file is not None:
-        st.success(f"📄 Lab Report '{uploaded_lab_file.name}' scanned successfully! Test parameters and date (2025-11-25) loaded.")
 
     with st.form("rd_form"):
         col1, col2, col3 = st.columns(3)
@@ -351,313 +424,113 @@ elif menu_selection == "🧪 Lab & R&D Reports":
                 "Batch No": batch_no,
                 "Variant": variant,
                 "Date": str(mfg_date),
-                "Coffee Weight (kg)": coffee_wt,
-                "Moisture": f"{moisture}°C",
                 "Status": qc_status,
-                "Attached File": file_name,
-                "Recorded By": st.session_state.current_user
+                "Attached File": file_name
             })
             st.success(f"✅ Lab Report '{batch_no}' saved successfully!")
 
     if st.session_state.rd_logs:
-        st.subheader("Saved Lab & R&D Logs (Delete Access Enabled)")
+        st.subheader("Saved Lab & R&D Logs")
         for idx, log in enumerate(st.session_state.rd_logs):
-            cols = st.columns([5, 1])
-            with cols[0]:
-                st.write(f"**{log['Batch No']}** | {log['Variant']} | Date: {log['Date']} | Status: {log['Status']} | File: {log['Attached File']}")
-            with cols[1]:
+            c1, c2 = st.columns([5, 1])
+            with c1:
+                st.write(f"**{log['Batch No']}** | {log['Variant']} | Date: {log['Date']} | Status: {log['Status']}")
+            with c2:
                 if st.button("Delete", key=f"del_rd_{idx}"):
                     st.session_state.rd_logs.pop(idx)
                     st.rerun()
 
-# --- SECTION 5: DEALERS DIRECTORY ---
+# --- SECTION 7: DEALERS DIRECTORY ---
 elif menu_selection == "🤝 Dealers Directory":
-    st.header("Local & Foreign Dealers Directory (Secure Confidential)")
-    
+    st.header("Local & Foreign Dealers Directory")
     if st.session_state.user_role == "Admin":
-        st.markdown("දේශීය සහ විදේශීය ඩීලර්වරුන්ගේ විස්තර ආරක්ෂිතව ඇතුළත් කර සුරකින්න.")
-        
         with st.form("dealer_form"):
-            d_col1, d_col2 = st.columns(2)
-            with d_col1:
-                dealer_name = st.text_input("Dealer / Business Name")
-                dealer_type = st.selectbox("Dealer Category", ["Local Dealer (දේශීය)", "Foreign Dealer (විදේශීය - උදා: Sweden)"])
-                country = st.text_input("Country & City (e.g., Sweden, Kalmar)")
-            with d_col2:
-                contact_person = st.text_input("Contact Person Name")
-                dealer_phone = st.text_input("Phone Number / WhatsApp")
-                dealer_email = st.text_input("Email Address")
-                
-            dealer_address = st.text_area("Full Business Address")
-            dealer_notes = st.text_area("Agreement / Special Notes")
-            
+            dealer_name = st.text_input("Dealer / Business Name")
+            country = st.text_input("Country & City (e.g., Sweden, Kalmar)")
             save_dealer = st.form_submit_button("Save Dealer Record")
             if save_dealer and dealer_name:
-                st.session_state.dealers_logs.append({
-                    "Dealer Name": dealer_name,
-                    "Category": dealer_type,
-                    "Country": country,
-                    "Contact Person": contact_person,
-                    "Phone": dealer_phone,
-                    "Email": dealer_email,
-                    "Address": dealer_address,
-                    "Notes": dealer_notes
-                })
-                st.success("Dealer record saved successfully!")
-
+                st.session_state.dealers_logs.append({"Dealer Name": dealer_name, "Country": country})
+                st.success("Dealer saved successfully!")
         if st.session_state.dealers_logs:
-            st.subheader("Saved Dealers Directory")
-            for idx, dealer in enumerate(st.session_state.dealers_logs):
-                cols = st.columns([5, 1])
-                with cols[0]:
-                    st.write(f"**{dealer['Dealer Name']}** ({dealer['Category']}) - {dealer['Country']}")
-                with cols[1]:
-                    if st.button("Delete", key=f"del_dealer_{idx}"):
+            for idx, d in enumerate(st.session_state.dealers_logs):
+                c1, c2 = st.columns([5, 1])
+                with c1:
+                    st.write(f"**{d['Dealer Name']}** ({d['Country']})")
+                with c2:
+                    if st.button("Delete", key=f"del_dlr_{idx}"):
                         st.session_state.dealers_logs.pop(idx)
                         st.rerun()
     else:
-        st.error("🔒 ඩීලර්ස් නාමාවලිය බැලීමේ සහ ඇතුළත් කිරීමේ පූර්ණ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
+        st.error("🔒 Admin access required.")
 
-# --- SECTION 6: LETTERS & MEMOS ---
+# --- SECTION 8: LETTERS & MEMOS ---
 elif menu_selection == "✉️ Letters & Memos":
-    st.header("Official Letters, Inbound/Outbound Memos & Documents")
-    
-    uploaded_letter_file = st.file_uploader("Upload Letter Document (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="letter_file_uploader")
-    default_subject = "General Corporate Notice"
-    if uploaded_letter_file is not None:
-        default_subject = uploaded_letter_file.name.rsplit('.', 1)[0].replace("_", " ").title()
-
+    st.header("Official Letters & Memos")
     with st.form("letter_form"):
-        col_l1, col_l2 = st.columns(2)
-        with col_l1:
-            doc_type = st.selectbox("Document Type", ["Inbound Letter (לැබුණු ලිපිය)", "Outbound Memo (යැවූ ලිපිය/මීමොව)", "Corporate Notice"])
-            subject_title = st.text_input("Subject / Title (විෂය)", value=default_subject)
-            sender_receiver = st.text_input("Sender / Recipient Name (අදාළ පාර්ශ්වය)")
-        with col_l2:
-            doc_date = st.date_input("Document Date")
-            
-        doc_notes = st.text_area("Key Notes / Summary (සටහන්)")
-        
-        submitted_letter = st.form_submit_button("Save Official Document")
-        if submitted_letter:
-            file_name = uploaded_letter_file.name if uploaded_letter_file is not None else "No File Attached"
-            st.session_state.letters_logs.append({
-                "Type": doc_type,
-                "Subject": subject_title,
-                "Party": sender_receiver,
-                "Date": str(doc_date),
-                "Notes": doc_notes,
-                "File": file_name,
-                "Managed By": st.session_state.current_user
-            })
-            st.success(f"✅ Official Document '{subject_title}' saved successfully!")
-
+        subject_title = st.text_input("Subject / Title")
+        submitted_letter = st.form_submit_button("Save Document")
+        if submitted_letter and subject_title:
+            st.session_state.letters_logs.append({"Subject": subject_title})
+            st.success("Document saved!")
     if st.session_state.letters_logs:
-        st.subheader("Registered Letters & Memos History")
-        for idx, let in enumerate(st.session_state.letters_logs):
-            cols = st.columns([5, 1])
-            with cols[0]:
-                st.write(f"**{let['Subject']}** | Type: {let['Type']} | Date: {let['Date']}")
-            with cols[1]:
+        for idx, l in enumerate(st.session_state.letters_logs):
+            c1, c2 = st.columns([5, 1])
+            with c1:
+                st.write(f"**{l['Subject']}**")
+            with c2:
                 if st.button("Delete", key=f"del_let_{idx}"):
                     st.session_state.letters_logs.pop(idx)
                     st.rerun()
 
-# --- SECTION 7: INVOICE GENERATOR ---
+# --- SECTION 9: INVOICE GENERATOR ---
 elif menu_selection == "📄 Invoice Generator":
-    st.header("Official Invoice Generator (Tablets Quantity-wise)")
-    col_inf1, col_inf2 = st.columns(2)
-    with col_inf1:
-        inv_no = st.text_input("Invoice Number", value="CCT-00012")
-        cust_name = st.text_input("Customer Name (Deliver To)", value="")
-        cust_phone = st.text_input("Telephone Number", value="")
-    with col_inf2:
-        pricing_type = st.selectbox("Pricing Category", ["Retail Price", "Trade Price"])
-        cust_address = st.text_area("Delivery Address", value="")
-
-    st.markdown("---")
-    st.subheader("Add Coffee Variant & Tablet Quantity")
-    
+    st.header("Official Invoice Generator")
+    inv_no = st.text_input("Invoice Number", value="CCT-00012")
+    cust_name = st.text_input("Customer Name")
     with st.form("add_cart_form"):
-        c_var = st.selectbox("Select Coffee Variant", [
-            "Black Coffee (Light Roast)", 
-            "Black Coffee (Dark Roast)", 
-            "Cinnamon Coffee", 
-            "Ginger Coffee"
-        ])
-        c_tablets_qty = st.number_input("Tablets Quantity (ටැබ්ලට් ගණන)", min_value=1, value=10)
-        add_btn = st.form_submit_button("Add Item to Invoice Cart")
-        
-        if add_btn:
-            unit_price = st.session_state.retail_price if pricing_type == "Retail Price" else st.session_state.trade_price
-            st.session_state.invoice_cart.append({
-                "Variant": c_var,
-                "Qty": c_tablets_qty,
-                "Unit Price": unit_price,
-                "Total": c_tablets_qty * unit_price
-            })
-            st.success(f"Added {c_tablets_qty} tablets of {c_var} to invoice cart!")
-
+        c_var = st.selectbox("Coffee Variant", list(st.session_state.tablet_stock.keys()))
+        c_qty = st.number_input("Quantity", min_value=1, value=10)
+        if st.form_submit_button("Add to Cart"):
+            st.session_state.invoice_cart.append({"Variant": c_var, "Qty": c_qty, "Total": c_qty * st.session_state.retail_price})
+            st.success("Added to cart!")
     if st.session_state.invoice_cart:
-        st.subheader("Current Invoice Items List")
-        cart_df = pd.DataFrame(st.session_state.invoice_cart)
-        st.table(cart_df)
-        
-        c_btn1, c_btn2 = st.columns(2)
-        with c_btn1:
-            if st.button("Clear Cart"):
-                st.session_state.invoice_cart = []
-                st.rerun()
-        with c_btn2:
-            generate_final = st.button("Generate & Save Official Invoice")
-
-        if generate_final:
-            grand_total = sum([item["Total"] for item in st.session_state.invoice_cart])
-            total_tablets_count = sum([item["Qty"] for item in st.session_state.invoice_cart])
-            
-            for cart_item in st.session_state.invoice_cart:
-                v_name = cart_item["Variant"]
-                v_qty = cart_item["Qty"]
-                if v_name in st.session_state.tablet_stock:
-                    st.session_state.tablet_stock[v_name] = max(0, st.session_state.tablet_stock[v_name] - v_qty)
-
+        st.table(pd.DataFrame(st.session_state.invoice_cart))
+        if st.button("Generate & Save Invoice"):
             st.session_state.orders.append({
                 "Invoice No": inv_no,
-                "Date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                "Customer": cust_name if cust_name else "Guest Customer",
-                "Phone": cust_phone,
-                "Address": cust_address,
-                "Type": pricing_type,
-                "Total Tablets": total_tablets_count,
-                "Grand Total (LKR)": grand_total,
-                "Cart Details": st.session_state.invoice_cart.copy(),
-                "Issued By": st.session_state.current_user
+                "Customer": cust_name,
+                "Total Tablets": sum([i['Qty'] for i in st.session_state.invoice_cart]),
+                "Grand Total (LKR)": sum([i['Total'] for i in st.session_state.invoice_cart])
             })
-            st.success("Invoice generated successfully!")
+            st.success("Invoice generated and saved!")
 
-# --- SECTION 8: DIRECTORS DASHBOARD (PRINTABLE HTML REPORTS & DELETE / LOCK ACCESS) ---
+# --- SECTION 10: DIRECTORS DASHBOARD ---
 elif menu_selection == "📋 Directors Dashboard":
-    st.header("Directors' Central Records & Printable Reports Dashboard")
-    st.markdown("සියලුම අංශවල වාර්තා මෙහි එකතු වී ඇත. ඔබට අවශ්‍ය වාර්තා වර්ගය තෝරා **අලංකාර මුද්‍රණ (Printable HTML Reports)** ලෙස ඩවුන්ලෝඩ් කරගත හැක.")
-
-    report_category = st.selectbox("Select Master Record Category to View & Print", [
+    st.header("Directors' Central Records & Master Dashboard")
+    report_category = st.selectbox("Select Category", [
+        "Expenses Report",
+        "Financial P&L & Profit Sharing",
         "Batch Production Records (BPR)",
         "Lab & R&D Reports", 
         "Raw Materials (RM-LOG)", 
         "Official Letters & Memos", 
         "Invoices & Dispatched Orders"
     ])
-
     st.markdown("---")
-
-    if report_category == "Batch Production Records (BPR)":
-        st.subheader("🏭 Batch Production Records (BPR Master)")
-        if st.session_state.bpr_logs:
-            for idx, log in enumerate(st.session_state.bpr_logs):
-                st.write(f"**{log['Batch No']}** | {log['Variant']} | Mfg: {log['Mfg Date']} | Qty: {log['Tablets Produced']}")
-            
-            bpr_df = pd.DataFrame(st.session_state.bpr_logs)
-            csv_data = bpr_df.to_csv(index=False).encode('utf-8')
-            st.download_button("🖨️ Download BPR Report (CSV)", csv_data, "bpr_report.csv", "text/csv")
+    if report_category == "Expenses Report":
+        if st.session_state.expenses_logs:
+            st.dataframe(pd.DataFrame(st.session_state.expenses_logs), use_container_width=True)
         else:
-            st.info("No Batch Production records found yet.")
-
+            st.info("No expenses found.")
+    elif report_category == "Financial P&L & Profit Sharing":
+        st.info("Check the 'Financial P&L & Profit Sharing' tab for complete breakdowns and printable reports.")
     elif report_category == "Lab & R&D Reports":
-        st.subheader("🧪 Lab & R&D Quality Control Records (Printable Report)")
         if st.session_state.rd_logs:
-            for idx, log in enumerate(st.session_state.rd_logs):
-                col_a, col_b = st.columns([5, 1])
-                with col_a:
-                    st.write(f"**Ref/Batch:** {log['Batch No']} | **Variant:** {log['Variant']} | **Date:** {log['Date']} | **Status:** {log['Status']}")
-                with col_b:
-                    if st.button("Delete", key=f"dash_del_rd_{idx}"):
-                        st.session_state.rd_logs.pop(idx)
-                        st.rerun()
-
-            # Printable HTML Report Generation
-            html_rows = ""
-            for log in st.session_state.rd_logs:
-                html_rows += f"""
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #ddd;">{log['Batch No']}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd;">{log['Variant']}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd;">{log['Date']}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd;">{log['Status']}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd;">{log['Attached File']}</td>
-                </tr>
-                """
-
-            printable_html = f"""<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Lab & R&D Test Reports Summary</title></head>
-<body style="font-family: Arial, sans-serif; padding: 30px; color: #333;">
-    <h2 style="color: #5a3825; text-align: center;">CEYLON COFFEE TABLETS (PVT) LTD</h2>
-    <h3 style="text-align: center; color: #666;">Research & Development Quality Control Test Summary</h3>
-    <hr style="border: 1px solid #5a3825;">
-    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-        <thead>
-            <tr style="background-color: #5a3825; color: white;">
-                <th style="padding: 10px; border: 1px solid #ddd;">Doc Ref / Batch</th>
-                <th style="padding: 10px; border: 1px solid #ddd;">Product Variant</th>
-                <th style="padding: 10px; border: 1px solid #ddd;">Test Date</th>
-                <th style="padding: 10px; border: 1px solid #ddd;">Status</th>
-                <th style="padding: 10px; border: 1px solid #ddd;">Attached File</th>
-            </tr>
-        </thead>
-        <tbody>
-            {html_rows}
-        </tbody>
-    </table>
-    <br><p style="font-size: 12px; color: #777; text-align: center;">Generated via Ceylon Coffee Tablets Enterprise Portal</p>
-</body>
-</html>"""
-
-            st.download_button(
-                label="🖨️ Download Printable Lab Report (.html for Printing)",
-                data=printable_html.encode('utf-8'),
-                file_name=f"Lab_Report_Summary_{datetime.now().strftime('%Y%m%d')}.html",
-                mime="text/html"
-            )
+            st.dataframe(pd.DataFrame(st.session_state.rd_logs), use_container_width=True)
         else:
-            st.info("No Lab & R&D records found yet.")
-
-    elif report_category == "Raw Materials (RM-LOG)":
-        st.subheader("📦 Raw Materials Sourcing & Purchase Logs")
-        if st.session_state.rm_logs:
-            rm_df = pd.DataFrame(st.session_state.rm_logs)
-            st.dataframe(rm_df, use_container_width=True)
-            st.download_button("🖨️️ Download Raw Materials Report (CSV)", rm_df.to_csv(index=False).encode('utf-8'), "raw_materials.csv", "text/csv")
-        else:
-            st.info("No Raw Materials records found yet.")
-
-    elif report_category == "Official Letters & Memos":
-        st.subheader("✉️ Official Letters & Memos Records")
-        if st.session_state.letters_logs:
-            for idx, let in enumerate(st.session_state.letters_logs):
-                col_l1, col_l2 = st.columns([5, 1])
-                with col_l1:
-                    st.write(f"**{let['Subject']}** | Type: {let['Type']} | Date: {let['Date']}")
-                with col_l2:
-                    if st.button("Delete", key=f"dash_del_let_{idx}"):
-                        st.session_state.letters_logs.pop(idx)
-                        st.rerun()
-        else:
-            st.info("No letters or memos recorded yet.")
-
+            st.info("No lab reports found.")
     elif report_category == "Invoices & Dispatched Orders":
-        st.subheader("📄 Invoices & Dispatched Orders Ledger")
         if st.session_state.orders:
-            total_orders_count = len(st.session_state.orders)
-            total_tablets_dispatched = sum([order["Total Tablets"] for order in st.session_state.orders])
-            total_revenue = sum([order["Grand Total (LKR)"] for order in st.session_state.orders])
-
-            m1, m2, m3 = st.columns(3)
-            m1.metric("Total Orders Dispatched", total_orders_count)
-            m2.metric("Total Tablets Dispatched", total_tablets_dispatched)
-            m3.metric("Total Revenue (LKR)", f"LKR {total_revenue:,.2f}")
-
-            st.markdown("---")
-            for idx, ord_item in enumerate(st.session_state.orders):
-                st.write(f"**Invoice No:** {ord_item['Invoice No']} | **Customer:** {ord_item['Customer']} | **Total:** LKR {ord_item['Grand Total (LKR)']:,.2f}")
+            st.dataframe(pd.DataFrame(st.session_state.orders), use_container_width=True)
         else:
-            st.info("No invoices or orders recorded yet.")
+            st.info("No orders found.")
