@@ -141,7 +141,7 @@ if menu_selection == "🏠 Welcome & Overview":
         📌 **පද්ධතියේ ප්‍රධාන විශේෂාංග:**
         - **ස්වයංක්‍රීය බැච් සහ කල් ඉකුත්වීමේ දිනය:** නිෂ්පාදන දිනය අනුව බැච් අංකය සහ මාස 8ක කල් ඉකුත්වීමේ දිනය ස්වයංක්‍රීයව හැදීම.
         - **ස්ටොක් කළමනාකරණය (Stores & Stock):** අමුද්‍රව්‍ය මිලදී ගැනීම්, නිෂ්පාදනයට අමුද්‍රව්‍ය අඩුවීම සහ ඉන්වොයිසි හරහා ටැබ්ලට් අලෙවි වූ විට ස්ටොක් එක ස්වයංක්‍රීයව යාවත්කාලීන වීම.
-        - **ඩිරෙක්ටර්ස් ඩෑෂ්බෝඩ් (Directors Dashboard):** ඕනෑම දිනයක් හෝ වාර්තා වර්ගයක් ෆිල්ටර් කර, ප්‍රින්ට් අවුට් සහ CSV ඩවුන්ලෝඩ් කරගත හැකි පහසුකම.
+        - **බාහිර ලිපි සහ ලැබ් වාර්තා අප්‌ලෝඩ් කිරීම:** PDF හෝ පින්තූර (Images) අප්‌ලෝඩ් කර ඩිරෙක්ටර්ස් ඩෑෂ්බෝඩ් එකෙන් බලාප්‍රින්ට් කරගත හැක.
         
         👉 **කරුණාකර වම්පස ඇති මෙනුව (Sidebar Menu) භාවිතා කර ඔබට අවශ්‍ය අංශය වෙත පිවිසෙන්න.**
         """)
@@ -336,9 +336,14 @@ elif menu_selection == "📦 Stores & Stock":
             })
             st.success(f"Added {r_qty} of {r_item} to stores successfully!")
 
-# --- SECTION 4: LAB & R&D REPORTS ---
+# --- SECTION 4: LAB & R&D REPORTS (OUTSIDE FORM FOR PROPER FILE UPLOAD) ---
 elif menu_selection == "🧪 Lab & R&D Reports":
     st.header("Lab & R&D Quality Control Reports")
+    st.markdown("ලැබ් වාර්තාවේ PDF හෝ පින්තූරය (Image) පහතින් අප්‌ලෝඩ් කර විස්තර ඇතුළත් කරන්න.")
+
+    # Placed OUTSIDE form so file uploader retains state
+    uploaded_lab_file = st.file_uploader("Upload Lab Report (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="lab_file_uploader")
+
     with st.form("rd_form"):
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -351,22 +356,23 @@ elif menu_selection == "🧪 Lab & R&D Reports":
             moisture = st.number_input("Moisture Level (%) [Standard < 4.0%]", value=3.5, step=0.1)
             qc_status = st.selectbox("Batch Status", ["APPROVED FOR RELEASE", "REJECTED / HOLD"])
 
-        uploaded_lab_file = st.file_uploader("Upload Existing Lab Report (PDF / Image)", type=["png", "jpg", "jpeg", "pdf"])
-
         submitted_rd = st.form_submit_button("Save R&D Report")
-        if submitted_rd and batch_no:
-            file_name = uploaded_lab_file.name if uploaded_lab_file else "No File Attached"
-            st.session_state.rd_logs.append({
-                "Batch No": batch_no,
-                "Variant": variant,
-                "Date": str(mfg_date),
-                "Coffee Weight (kg)": coffee_wt,
-                "Moisture": f"{moisture}%",
-                "Status": qc_status,
-                "Attached File": file_name,
-                "Recorded By": st.session_state.current_user
-            })
-            st.success("Lab & R&D Report Uploaded and Saved Successfully!")
+        if submitted_rd:
+            if batch_no:
+                file_name = uploaded_lab_file.name if uploaded_lab_file is not None else "No File Attached"
+                st.session_state.rd_logs.append({
+                    "Batch No": batch_no,
+                    "Variant": variant,
+                    "Date": str(mfg_date),
+                    "Coffee Weight (kg)": coffee_wt,
+                    "Moisture": f"{moisture}%",
+                    "Status": qc_status,
+                    "Attached File": file_name,
+                    "Recorded By": st.session_state.current_user
+                })
+                st.success(f"✅ Lab & R&D Report for Batch {batch_no} saved successfully with file: {file_name}!")
+            else:
+                st.error("⚠️ කරුණාකර බැච් අංකය (Batch Number) ඇතුළත් කරන්න.")
 
     if st.session_state.rd_logs:
         st.subheader("Saved Lab & R&D Logs")
@@ -420,34 +426,41 @@ elif menu_selection == "🤝 Dealers Directory":
     else:
         st.error("🔒 රහස්‍යභාවය සුරක්ෂිත කිරීම සඳහා ඩීලර්ස් නාමාවලිය බැලීමේ සහ ඇතුළත් කිරීමේ පූර්ණ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
-# --- SECTION 6: LETTERS & MEMOS ---
+# --- SECTION 6: LETTERS & MEMOS (OUTSIDE FORM FOR PROPER UPLOAD) ---
 elif menu_selection == "✉️ Letters & Memos":
     st.header("Official Letters, Inbound/Outbound Memos & Documents")
+    st.markdown("ලිපියේ හෝ මීමොවේ PDF හෝ පින්තූරය (Image) පහතින් අප්‌ලෝඩ් කරන්න.")
+
+    # Placed OUTSIDE form
+    uploaded_letter_file = st.file_uploader("Upload Letter Document (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="letter_file_uploader")
+
     with st.form("letter_form"):
         col_l1, col_l2 = st.columns(2)
         with col_l1:
-            doc_type = st.selectbox("Document Type", ["Inbound Letter (לැබුණු ලිපිය)", "Outbound Memo (යැවූ ලිපිය/මීමොව)", "Corporate Notice"])
+            doc_type = st.selectbox("Document Type", ["Inbound Letter (ලැබුණු ලිපිය)", "Outbound Memo (යැවූ ලිපිය/මීමොව)", "Corporate Notice"])
             subject_title = st.text_input("Subject / Title (විෂය)")
             sender_receiver = st.text_input("Sender / Recipient Name (අදාළ පාර්ශ්වය)")
         with col_l2:
             doc_date = st.date_input("Document Date")
-            uploaded_doc = st.file_uploader("Upload Existing Letter/Document (PDF / Image)", type=["png", "jpg", "jpeg", "pdf"])
             
         doc_notes = st.text_area("Key Notes / Summary (සටහන්)")
         
         submitted_letter = st.form_submit_button("Save Official Document")
-        if submitted_letter and subject_title:
-            file_name = uploaded_doc.name if uploaded_doc else "No File Attached"
-            st.session_state.letters_logs.append({
-                "Type": doc_type,
-                "Subject": subject_title,
-                "Party": sender_receiver,
-                "Date": str(doc_date),
-                "Notes": doc_notes,
-                "File": file_name,
-                "Managed By": st.session_state.current_user
-            })
-            st.success("Official Letter/Memo Uploaded and Saved Successfully!")
+        if submitted_letter:
+            if subject_title:
+                file_name = uploaded_letter_file.name if uploaded_letter_file is not None else "No File Attached"
+                st.session_state.letters_logs.append({
+                    "Type": doc_type,
+                    "Subject": subject_title,
+                    "Party": sender_receiver,
+                    "Date": str(doc_date),
+                    "Notes": doc_notes,
+                    "File": file_name,
+                    "Managed By": st.session_state.current_user
+                })
+                st.success(f"✅ Official Document '{subject_title}' saved successfully with file: {file_name}!")
+            else:
+                st.error("⚠️ කරුණාකර විෂය (Subject) ඇතුළත් කරන්න.")
 
     if st.session_state.letters_logs:
         st.subheader("Registered Letters & Memos History")
@@ -617,12 +630,11 @@ elif menu_selection == "📄 Invoice Generator":
             else:
                 st.info("🔒 ඩවුන්ලෝඩ් කරගැනීමේ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
-# --- SECTION 8: DIRECTORS DASHBOARD (CENTRAL FILTER & PRINT FOR MANUAL FILES) ---
+# --- SECTION 8: DIRECTORS DASHBOARD ---
 elif menu_selection == "📋 Directors Dashboard":
     st.header("Directors' Central Records & Master Dashboard")
-    st.markdown("සියලුම අංශවල (Batch Production, Lab Reports, Raw Materials, Letters, Invoices) වාර්තා මෙහි එකතු වී ඇත. ඔබට අවශ්‍ය වාර්තා වර්ගය සහ දිනය (Date) තෝරා (Filter කර) **ප්‍රින්ට් අවුට් (Print) සඳහා ඩවුන්ලෝඩ්** කරගත හැක.")
+    st.markdown("සියලුම අංශවල (Batch Production, Lab Reports, Raw Materials, Letters, Invoices) වාර්තා මෙහි එකතු වී ඇත. ඔබට අවශ්‍ය වාර්තා වර්ගය සහ දිනය තෝරා **ප්‍රින්ට් අවුට් (Print) සඳහා ඩවුන්ලෝඩ්** කරගත හැක.")
 
-    # Select Report Category
     report_category = st.selectbox("Select Master Record Category to View & Print", [
         "Batch Production Records (BPR)",
         "Lab & R&D Reports", 
@@ -633,13 +645,11 @@ elif menu_selection == "📋 Directors Dashboard":
 
     st.markdown("---")
 
-    # 1. BPR LOGS
     if report_category == "Batch Production Records (BPR)":
         st.subheader("🏭 Batch Production Records (BPR Master)")
         if st.session_state.bpr_logs:
             bpr_df = pd.DataFrame(st.session_state.bpr_logs)
             
-            # Date filter option
             use_date_filter = st.checkbox("Filter by Manufacture Date")
             if use_date_filter and "Mfg Date" in bpr_df.columns:
                 unique_dates = list(bpr_df["Mfg Date"].unique())
@@ -648,7 +658,6 @@ elif menu_selection == "📋 Directors Dashboard":
             
             st.dataframe(bpr_df, use_container_width=True)
             
-            # Print / Download for manual files
             csv_data = bpr_df.to_csv(index=False).encode('utf-8')
             st.download_button(
                 label="🖨️ Download / Print BPR Report (CSV for Manual Files)",
@@ -659,7 +668,6 @@ elif menu_selection == "📋 Directors Dashboard":
         else:
             st.info("No Batch Production records found yet.")
 
-    # 2. LAB & R&D REPORTS
     elif report_category == "Lab & R&D Reports":
         st.subheader("🧪 Lab & R&D Quality Control Records")
         if st.session_state.rd_logs:
@@ -683,7 +691,6 @@ elif menu_selection == "📋 Directors Dashboard":
         else:
             st.info("No Lab & R&D records found yet.")
 
-    # 3. RAW MATERIALS
     elif report_category == "Raw Materials (RM-LOG)":
         st.subheader("📦 Raw Materials Sourcing & Purchase Logs")
         if st.session_state.rm_logs:
@@ -707,7 +714,6 @@ elif menu_selection == "📋 Directors Dashboard":
         else:
             st.info("No Raw Materials records found yet.")
 
-    # 4. LETTERS & MEMOS
     elif report_category == "Official Letters & Memos":
         st.subheader("✉️ Official Letters & Memos Records")
         if st.session_state.letters_logs:
@@ -731,7 +737,6 @@ elif menu_selection == "📋 Directors Dashboard":
         else:
             st.info("No letters or memos recorded yet.")
 
-    # 5. INVOICES & DISPATCHED ORDERS
     elif report_category == "Invoices & Dispatched Orders":
         st.subheader("📄 Invoices & Dispatched Orders Ledger")
         if st.session_state.orders:
