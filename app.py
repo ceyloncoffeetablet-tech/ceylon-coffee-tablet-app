@@ -1,6 +1,7 @@
 import streamlit as st
 from datetime import datetime
 import pandas as pd
+from io import BytesIO
 
 st.set_page_config(page_title="Ceylon Coffee Tablets - Enterprise Portal", layout="wide")
 
@@ -62,13 +63,25 @@ with tabs[0]:
         trade_margin = (trade_profit / st.session_state.trade_price) * 100 if st.session_state.trade_price > 0 else 0
         st.warning(f"**Trade Profit per Tablet:** LKR {trade_profit:.2f} \n\n **Profit Margin:** {trade_margin:.2f}%")
 
-# --- TAB 2: LAB / R&D REPORTS ---
+    # Download Cost Analysis Report
+    cost_data = pd.DataFrame([{
+        "Manufacturing Cost": st.session_state.mfg_cost,
+        "Courier Cost": st.session_state.courier_cost,
+        "Total Landed Cost": total_cost,
+        "Retail Price": st.session_state.retail_price,
+        "Trade Price": st.session_state.trade_price
+    }])
+    st.download_button("📥 Download Cost Analysis Report (CSV)", cost_data.to_csv(index=False).encode('utf-8'), "cost_analysis.csv", "text/csv")
+
+# --- TAB 2: LAB / R&D REPORTS (WITH PHOTO UPLOAD) ---
 with tabs[1]:
     st.header("Lab & R&D Quality Control Reports (BPR-QC Master)")
+    st.markdown("පරීක්ෂණ වාර්තා (Lab Reports) සඳහා අවශ්‍ය ඡායාරූප (Photos) උඩුගත කර (Upload) වාර්තාව සුරකින්න.")
+
     with st.form("rd_form"):
         col1, col2, col3 = st.columns(3)
         with col1:
-            batch_no = st.text_input("Batch Number (e.g., CCT260930B)")
+            batch_no = st.text_input("Batch Number (e.g., CCT-2026-001)")
             variant = st.selectbox("Product Variant", ["Black Coffee (Light Roast)", "Black Coffee (Dark Roast)", "Cinnamon Coffee", "Ginger Coffee"])
         with col2:
             mfg_date = st.date_input("Manufacture Date")
@@ -77,20 +90,26 @@ with tabs[1]:
             moisture = st.number_input("Moisture Level (%) [Standard < 4.0%]", value=3.5, step=0.1)
             qc_status = st.selectbox("Batch Status", ["APPROVED FOR RELEASE", "REJECTED / HOLD"])
 
+        uploaded_photo = st.file_uploader("Attach Lab Test / Report Photo", type=["png", "jpg", "jpeg"])
+
         submitted_rd = st.form_submit_button("Save R&D Report")
         if submitted_rd and batch_no:
+            photo_name = uploaded_photo.name if uploaded_photo else "No Photo"
             st.session_state.rd_logs.append({
                 "Batch No": batch_no,
                 "Variant": variant,
                 "Date": str(mfg_date),
                 "Moisture": f"{moisture}%",
-                "Status": qc_status
+                "Status": qc_status,
+                "Attached Photo": photo_name
             })
-            st.success("R&D Report Saved Successfully!")
+            st.success("R&D Report Saved Successfully with Photo!")
 
     if st.session_state.rd_logs:
         st.subheader("Saved R&D Logs")
-        st.table(st.session_state.rd_logs)
+        rd_df = pd.DataFrame(st.session_state.rd_logs)
+        st.table(rd_df)
+        st.download_button("📥 Download R&D Logs Report (CSV)", rd_df.to_csv(index=False).encode('utf-8'), "rd_logs_report.csv", "text/csv")
 
 # --- TAB 3: RAW MATERIALS (RM-LOG) ---
 with tabs[2]:
@@ -121,16 +140,18 @@ with tabs[2]:
 
     if st.session_state.rm_logs:
         st.subheader("Raw Materials Stock & Sourcing Log")
-        st.table(st.session_state.rm_logs)
+        rm_df = pd.DataFrame(st.session_state.rm_logs)
+        st.table(rm_df)
+        st.download_button("📥 Download Raw Materials Report (CSV)", rm_df.to_csv(index=False).encode('utf-8'), "raw_materials_report.csv", "text/csv")
 
 # --- TAB 4: PROFESSIONAL INVOICE GENERATOR ---
 with tabs[3]:
     st.header("Official Invoice Generator (Tablets Quantity-wise)")
-    st.markdown("පාරිභෝගික විස්තර හිස්තැන්වලට ඇතුළත් කර, අවශ්‍ය ටැබ්ලට් වර්ග සහ ප්‍රමාණය (Tablets Qty) එකතු කර නිල ඉන්වොයිසිය සකස් කරගන්න.")
+    st.markdown("ඉන්වොයිස් අංකය **CCT-** යටතේ ඇතුළත් කර, පාරිභෝගික විස්තර සහ ටැබ්ලට් ප්‍රමාණයන් එකතු කර ඉන්වොයිසිය සකස් කරගන්න.")
 
     col_inf1, col_inf2 = st.columns(2)
     with col_inf1:
-        inv_no = st.text_input("Invoice Number", value=f"CET {len(st.session_state.orders)+1010}")
+        inv_no = st.text_input("Invoice Number", value="CCT-")
         cust_name = st.text_input("Customer Name (Deliver To)", value="")
         cust_phone = st.text_input("Telephone Number", value="")
     with col_inf2:
@@ -177,7 +198,6 @@ with tabs[3]:
             grand_total = sum([item["Total"] for item in st.session_state.invoice_cart])
             total_tablets_count = sum([item["Qty"] for item in st.session_state.invoice_cart])
             
-            # Save to global records
             st.session_state.orders.append({
                 "Invoice No": inv_no,
                 "Date": datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -192,7 +212,6 @@ with tabs[3]:
             
             st.success("Invoice generated and saved successfully!")
 
-            # Render Exact Official Layout Matching Image Structure
             cart_rows_html = ""
             for idx, cart_item in enumerate(st.session_state.invoice_cart, 1):
                 cart_rows_html += f"""
@@ -264,12 +283,12 @@ with tabs[3]:
             """
             st.markdown(invoice_html, unsafe_allow_html=True)
             st.markdown("---")
-            st.info("🖨️ **ඉන්වොයිසිය ඩවුන්ලෝඩ් කර ගැනීමට:** ඔබේ කීබෝඩ් එකෙන් **`Ctrl + P`** (Windows) හෝ **`Cmd + P`** (Mac) ඔබා **'Save as PDF'** තෝරාගන්න.")
+            st.info("🖨️ **ඉන්වොයිසිය PDF ලෙස ඩවුන්ලෝඩ් කර ගැනීමට:** ඔබේ කීබෝඩ් එකෙන් **`Ctrl + P`** (Windows) හෝ **`Cmd + P`** (Mac) ඔබා 'Save as PDF' තෝරාගන්න.")
 
 # --- TAB 5: DIRECTORS & ALL RECORDS ---
 with tabs[4]:
     st.header("Directors' Management Report & All Orders History")
-    st.markdown("මාසිකව සහ දිනපතා නිකුත් කළ ටැබ්ලට් ප්‍රමාණයන් සහ ඇණවුම් විස්තර මෙහි දැක්වේ.")
+    st.markdown("මාසිකව සහ දිනපතා නිකුත් කළ ටැබ්ලට් ප්‍රමාණයන් සහ ඇණවුම් වාර්තා මෙහි දැක්වේ.")
 
     if st.session_state.orders:
         total_orders_count = len(st.session_state.orders)
@@ -294,7 +313,10 @@ with tabs[4]:
                 "Total Tablets": ord_item["Total Tablets"],
                 "Grand Total (LKR)": f"{ord_item['Grand Total (LKR)']:,.2f}"
             })
-        st.table(display_orders)
+        orders_df = pd.DataFrame(display_orders)
+        st.table(orders_df)
+        
+        st.download_button("📥 Download All Orders Report (CSV)", orders_df.to_csv(index=False).encode('utf-8'), "all_orders_report.csv", "text/csv")
 
         if st.button("Clear All Orders History"):
             st.session_state.orders = []
