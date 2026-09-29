@@ -63,7 +63,6 @@ with tabs[0]:
         trade_margin = (trade_profit / st.session_state.trade_price) * 100 if st.session_state.trade_price > 0 else 0
         st.warning(f"**Trade Profit per Tablet:** LKR {trade_profit:.2f} \n\n **Profit Margin:** {trade_margin:.2f}%")
 
-    # Download Cost Analysis Report
     cost_data = pd.DataFrame([{
         "Manufacturing Cost": st.session_state.mfg_cost,
         "Courier Cost": st.session_state.courier_cost,
@@ -76,7 +75,7 @@ with tabs[0]:
 # --- TAB 2: LAB / R&D REPORTS (WITH PHOTO UPLOAD) ---
 with tabs[1]:
     st.header("Lab & R&D Quality Control Reports (BPR-QC Master)")
-    st.markdown("පරීක්ෂණ වාර්තා (Lab Reports) සඳහා අවශ්‍ය ඡායාරූප (Photos) උඩුගත කර (Upload) වාර්තාව සුරකින්න.")
+    st.markdown("පරීක්ෂණ වාර්තා සඳහා අවශ්‍ය ඡායාරූප (Photos) උඩුගත කර වාර්තාව සුරකින්න.")
 
     with st.form("rd_form"):
         col1, col2, col3 = st.columns(3)
@@ -147,7 +146,7 @@ with tabs[2]:
 # --- TAB 4: PROFESSIONAL INVOICE GENERATOR ---
 with tabs[3]:
     st.header("Official Invoice Generator (Tablets Quantity-wise)")
-    st.markdown("ඉන්වොයිස් අංකය **CCT-** යටතේ ඇතුළත් කර, පාරිභෝගික විස්තර සහ ටැබ්ලට් ප්‍රමාණයන් එකතු කර ඉන්වොයිසිය සකස් කරගන්න.")
+    st.markdown("ඉන්වොයිස් අංකය **CCT-** යටතේ ඇතුළත් කර, බහු කෝපි වර්ග (Multiple Variants) එකින් එක කාර්ට් එකට එකතු කරගත හැක.")
 
     col_inf1, col_inf2 = st.columns(2)
     with col_inf1:
@@ -159,7 +158,7 @@ with tabs[3]:
         cust_address = st.text_area("Delivery Address", value="")
 
     st.markdown("---")
-    st.subheader("Add Coffee Variant & Tablet Quantity")
+    st.subheader("Add Coffee Variant & Tablet Quantity (Multiple items can be added)")
     
     with st.form("add_cart_form"):
         c_var = st.selectbox("Select Coffee Variant", [
@@ -179,10 +178,10 @@ with tabs[3]:
                 "Unit Price": unit_price,
                 "Total": c_tablets_qty * unit_price
             })
-            st.success(f"Added {c_tablets_qty} tablets of {c_var} to invoice cart!")
+            st.success(f"Added {c_tablets_qty} tablets of {c_var} to invoice cart! (තව අවශ්‍ය නම් තවත් වර්ගයක් තෝරා එකතු කරන්න)")
 
     if st.session_state.invoice_cart:
-        st.subheader("Current Invoice Items")
+        st.subheader("Current Invoice Items List")
         cart_df = pd.DataFrame(st.session_state.invoice_cart)
         st.table(cart_df)
         
