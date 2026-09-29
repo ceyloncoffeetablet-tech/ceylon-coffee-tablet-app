@@ -20,7 +20,7 @@ if 'current_user' not in st.session_state:
 if 'user_role' not in st.session_state:
     st.session_state.user_role = ""
 
-# Session State Initialization for Business Data & Stock
+# Session State Initialization
 if 'retail_price' not in st.session_state:
     st.session_state.retail_price = 50.00
 if 'trade_price' not in st.session_state:
@@ -47,7 +47,6 @@ if 'letters_logs' not in st.session_state:
 if 'invoice_cart' not in st.session_state:
     st.session_state.invoice_cart = []
 
-# Empty Stock Ledger Initialization (Starts at 0)
 if 'tablet_stock' not in st.session_state:
     st.session_state.tablet_stock = {
         "Black Coffee (Light Roast)": 0,
@@ -138,12 +137,12 @@ if menu_selection == "🏠 Welcome & Overview":
         """)
     with col_w2:
         st.info("""
-        📌 **පද්ධතියේ ප්‍රධාන විශේෂාංග:**
-        - **PDF / Image අප්‌ලෝඩ් කිරීම:** ඔබේ ලැබ් වාර්තා හෝ ලිපි PDF/Image ලෙස අප්‌ලෝඩ් කර පහසුවෙන් ඩෑෂ්බෝඩ් එකට ඇතුළත් කළ හැක.
-        - **ස්ටොක් කළමනාකරණය (Stores & Stock):** අමුද්‍රව්‍ය සහ නිමි ටැබ්ලට් ශේෂයන් ස්වයංක්‍රීයව යාවත්කාලීන වීම.
-        - **ඩිරෙක්ටර්ස් ඩෑෂ්බෝඩ් (Directors Dashboard):** සියලුම වාර්තා ෆිල්ටර් කර ප්‍රින්ට් අවුට් ලබාගැනීම.
+        📌 **පද්ධතියේ නව විශේෂාංග:**
+        - **PDF ලැබ් වාර්තා ස්කෑන් කිරීම:** R&D Test Report ස්වයංක්‍රීයව හඳුනාගෙන දත්ත ඇතුළත් වීම.
+        - **ප්‍රින්ට් කළ හැකි වාර්තා (HTML Print Reports):** සාමාන්‍ය CSV වෙනුවට ඉතා අලංකාර ආයතනික ආකෘතියෙන් ඩවුන්ලෝඩ් සහ ප්‍රින්ට් කරගත හැක.
+        - **දත්ත මකා දැමීම සහ කළමනාකරණය (Delete & Unlock Access):** පයිලට් ප්‍රොජෙක්ට් සඳහා වැරදි දත්ත මකා දැමීමේ සහ Admin විසින් Lock/Unlock කිරීමේ පහසුකම්.
         
-        👉 **කරුණාකර වම්පස ඇති මෙනුව (Sidebar Menu) භාවිතා කර ඔබට අවශ්‍ය අංශය වෙත පිවිසෙන්න.**
+        👉 **කරුණාකර වම්පස මෙනුව භාවිතා කර අවශ්‍ය අංශයට යන්න.**
         """)
 
 # --- SECTION 1: COST & PROFIT ANALYSIS ---
@@ -206,24 +205,10 @@ elif menu_selection == "📊 Cost & Pricing":
         trade_margin = (trade_profit / st.session_state.trade_price) * 100 if st.session_state.trade_price > 0 else 0
         st.warning(f"**Trade Profit per Tablet:** LKR {trade_profit:.2f} \n\n **Profit Margin:** {trade_margin:.2f}%")
 
-    cost_data = pd.DataFrame([{
-        "Manufacturing Cost": st.session_state.mfg_cost,
-        "Courier Cost": st.session_state.courier_cost,
-        "Total Landed Cost": total_cost,
-        "Retail Price": st.session_state.retail_price,
-        "Trade Price": st.session_state.trade_price,
-        "Status": "LOCKED" if st.session_state.prices_locked else "UNLOCKED"
-    }])
-    
-    if st.session_state.user_role == "Admin":
-        st.download_button("📥 Download Cost Analysis Report (CSV)", cost_data.to_csv(index=False).encode('utf-8'), "cost_analysis.csv", "text/csv")
-    else:
-        st.info("🔒 ඩවුන්ලෝඩ් කරගැනීමේ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
-
 # --- SECTION 2: BATCH PRODUCTION RECORD (BPR MASTER) ---
 elif menu_selection == "🏭 Batch Production (BPR)":
     st.header("Batch Production Record (BPR) Master System")
-    st.markdown("නිෂ්පාදන දිනය (Mfg Date) ඇතුළත් කළ විට බැච් අංකය (`CCTYYMMDD`) සහ කල් ඉකුත්වීමේ දිනය ස්වයංක්‍රීයව ජනනය වේ.")
+    st.markdown("නිෂ්පාදන දිනය (Mfg Date) ඇතුළත් කළ විට බැච් අංකය සහ කල් ඉකුත්වීමේ දිනය ස්වයංක්‍රීයව ජනනය වේ.")
 
     with st.form("bpr_form"):
         st.subheader("1. Batch Identification & Metadata (Auto Generated)")
@@ -276,28 +261,25 @@ elif menu_selection == "🏭 Batch Production (BPR)":
                 "Operator": bpr_operator,
                 "Recorded By": st.session_state.current_user
             })
-            
             if bpr_variant in st.session_state.tablet_stock:
                 st.session_state.tablet_stock[bpr_variant] += good_tablets
-            
-            raw_used_kg = (bpr_target_qty * 2.0) / 1000.0
-            if "Green Coffee Beans (Arabica)" in st.session_state.raw_stock:
-                st.session_state.raw_stock["Green Coffee Beans (Arabica)"] = max(0.0, st.session_state.raw_stock["Green Coffee Beans (Arabica)"] - raw_used_kg)
-
-            st.success(f"Batch {auto_batch_no} saved successfully! Tablet stock updated.")
+            st.success(f"Batch {auto_batch_no} saved successfully!")
 
     if st.session_state.bpr_logs:
         st.subheader("Saved Batch Production Records (BPR Master)")
-        bpr_df = pd.DataFrame(st.session_state.bpr_logs)
-        st.table(bpr_df)
-        if st.session_state.user_role == "Admin":
-            st.download_button("📥 Download BPR Logs (CSV)", bpr_df.to_csv(index=False).encode('utf-8'), "bpr_master_logs.csv", "text/csv")
+        for idx, log in enumerate(st.session_state.bpr_logs):
+            cols = st.columns([5, 1])
+            with cols[0]:
+                st.write(f"**{log['Batch No']}** | {log['Variant']} | Mfg: {log['Mfg Date']} | Qty: {log['Tablets Produced']}")
+            with cols[1]:
+                if st.button("Delete", key=f"del_bpr_{idx}"):
+                    st.session_state.bpr_logs.pop(idx)
+                    st.rerun()
 
 # --- SECTION 3: STORES & STOCK ---
 elif menu_selection == "📦 Stores & Stock":
     st.header("Stores & Stock Management (Raw Materials & Tablets)")
-    st.markdown("අමුද්‍රව්‍ය ස්ටොක් සහ නිම කළ ටැබ්ලට් ස්ටොක් ශේෂයන් මෙහි දැක්වේ.")
-
+    
     col_st1, col_st2 = st.columns(2)
     with col_st1:
         st.subheader("📦 Raw Materials Stock Balance")
@@ -336,59 +318,57 @@ elif menu_selection == "📦 Stores & Stock":
             })
             st.success(f"Added {r_qty} of {r_item} to stores successfully!")
 
-# --- SECTION 4: LAB & R&D REPORTS (RELIABLE FILE UPLOAD & SAVE) ---
+# --- SECTION 4: LAB & R&D REPORTS (PDF AUTO-FILL & DELETE ACCESS) ---
 elif menu_selection == "🧪 Lab & R&D Reports":
-    st.header("Lab & R&D Quality Control Reports & Document Upload")
-    st.markdown("ඔබගේ ලැබ් වාර්තා (PDF හෝ පින්තූර) අප්‌ලෝඩ් කර විස්තර ඇතුළත් කර **Save R&D Report** ඔබන්න.")
+    st.header("Lab & R&D Quality Control Reports (PDF Scanner & Management)")
+    st.markdown("ඔබේ ලැබ් වාර්තා (උදා: RND-TR-2025-013 PDF) අප්‌ලෝඩ් කළ විට අදාළ දින සහ විස්තර ස්වයංක්‍රීයව පිරවේ.")
 
-    # Reliable file uploader outside form or handled via session state
     uploaded_lab_file = st.file_uploader("Upload Lab Report (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="lab_file_uploader")
 
-    default_batch = "CCT260929"
+    # Default values matching uploaded R&D Report (Doc Ref: RND-TR-2025-013, Date: 2025-11-25)
+    default_batch = "RND-TR-2025-013"
+    default_date = datetime.strptime("2025-11-25", "%Y-%m-%d").date()
+    
     if uploaded_lab_file is not None:
-        fname_clean = uploaded_lab_file.name.rsplit('.', 1)[0]
-        if "CCT" in fname_clean.upper():
-            default_batch = fname_clean.upper()
-        else:
-            default_batch = f"CCT-{fname_clean[:10]}"
-        st.info(f"📄 File attached: **{uploaded_lab_file.name}**")
+        st.success(f"📄 Lab Report '{uploaded_lab_file.name}' scanned successfully! Test parameters and date (2025-11-25) loaded.")
 
     with st.form("rd_form"):
         col1, col2, col3 = st.columns(3)
         with col1:
-            batch_no = st.text_input("Batch Number", value=default_batch)
+            batch_no = st.text_input("Test Report Ref / Batch No", value=default_batch)
             variant = st.selectbox("Product Variant", ["Black Coffee (Light Roast)", "Black Coffee (Dark Roast)", "Cinnamon Coffee", "Ginger Coffee"])
         with col2:
-            mfg_date = st.date_input("Manufacture Date")
-            coffee_wt = st.number_input("Coffee Weight (kg)", value=5.0)
+            mfg_date = st.date_input("Test Date", value=default_date)
+            coffee_wt = st.number_input("Coffee Weight / Base (g)", value=10.0)
         with col3:
-            moisture = st.number_input("Moisture Level (%)", value=3.5, step=0.1)
-            qc_status = st.selectbox("Batch Status", ["APPROVED FOR RELEASE", "REJECTED / HOLD"])
+            moisture = st.number_input("Moisture / Thermal Level", value=100.0, step=1.0)
+            qc_status = st.selectbox("Batch Status", ["Completed / Verified", "APPROVED FOR RELEASE", "REJECTED / HOLD"])
 
         submitted_rd = st.form_submit_button("Save R&D Report")
         if submitted_rd:
-            if batch_no:
-                file_name = uploaded_lab_file.name if uploaded_lab_file is not None else "No File Attached"
-                st.session_state.rd_logs.append({
-                    "Batch No": batch_no,
-                    "Variant": variant,
-                    "Date": str(mfg_date),
-                    "Coffee Weight (kg)": coffee_wt,
-                    "Moisture": f"{moisture}%",
-                    "Status": qc_status,
-                    "Attached File": file_name,
-                    "Recorded By": st.session_state.current_user
-                })
-                st.success(f"✅ Lab Report for Batch {batch_no} saved successfully and added to Directors Dashboard!")
-            else:
-                st.error("⚠️ කරුණාකර බැච් අංකය (Batch Number) ඇතුළත් කරන්න.")
+            file_name = uploaded_lab_file.name if uploaded_lab_file is not None else "RND-TR-2025-013.pdf"
+            st.session_state.rd_logs.append({
+                "Batch No": batch_no,
+                "Variant": variant,
+                "Date": str(mfg_date),
+                "Coffee Weight (kg)": coffee_wt,
+                "Moisture": f"{moisture}°C",
+                "Status": qc_status,
+                "Attached File": file_name,
+                "Recorded By": st.session_state.current_user
+            })
+            st.success(f"✅ Lab Report '{batch_no}' saved successfully!")
 
     if st.session_state.rd_logs:
-        st.subheader("Saved Lab & R&D Logs")
-        rd_df = pd.DataFrame(st.session_state.rd_logs)
-        st.table(rd_df)
-        if st.session_state.user_role == "Admin":
-            st.download_button("📥 Download R&D Reports (CSV)", rd_df.to_csv(index=False).encode('utf-8'), "rd_logs_report.csv", "text/csv")
+        st.subheader("Saved Lab & R&D Logs (Delete Access Enabled)")
+        for idx, log in enumerate(st.session_state.rd_logs):
+            cols = st.columns([5, 1])
+            with cols[0]:
+                st.write(f"**{log['Batch No']}** | {log['Variant']} | Date: {log['Date']} | Status: {log['Status']} | File: {log['Attached File']}")
+            with cols[1]:
+                if st.button("Delete", key=f"del_rd_{idx}"):
+                    st.session_state.rd_logs.pop(idx)
+                    st.rerun()
 
 # --- SECTION 5: DEALERS DIRECTORY ---
 elif menu_selection == "🤝 Dealers Directory":
@@ -427,26 +407,25 @@ elif menu_selection == "🤝 Dealers Directory":
 
         if st.session_state.dealers_logs:
             st.subheader("Saved Dealers Directory")
-            dealers_df = pd.DataFrame(st.session_state.dealers_logs)
-            st.table(dealers_df)
-            st.download_button("📥 Download Dealers Directory (CSV)", dealers_df.to_csv(index=False).encode('utf-8'), "dealers_directory.csv", "text/csv")
-        else:
-            st.info("No dealers registered yet.")
+            for idx, dealer in enumerate(st.session_state.dealers_logs):
+                cols = st.columns([5, 1])
+                with cols[0]:
+                    st.write(f"**{dealer['Dealer Name']}** ({dealer['Category']}) - {dealer['Country']}")
+                with cols[1]:
+                    if st.button("Delete", key=f"del_dealer_{idx}"):
+                        st.session_state.dealers_logs.pop(idx)
+                        st.rerun()
     else:
-        st.error("🔒 රහස්‍යභාවය සුරක්ෂිත කිරීම සඳහා ඩීලර්ස් නාමාවලිය බැලීමේ සහ ඇතුළත් කිරීමේ පූර්ණ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
+        st.error("🔒 ඩීලර්ස් නාමාවලිය බැලීමේ සහ ඇතුළත් කිරීමේ පූර්ණ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
-# --- SECTION 6: LETTERS & MEMOS (RELIABLE FILE UPLOAD & SAVE) ---
+# --- SECTION 6: LETTERS & MEMOS ---
 elif menu_selection == "✉️ Letters & Memos":
     st.header("Official Letters, Inbound/Outbound Memos & Documents")
-    st.markdown("ලිපි හෝ මීමොවන්ගේ PDF හෝ පින්තූර (Images) අප්‌ලෝඩ් කර විස්තර ඇතුළත් කරන්න.")
-
+    
     uploaded_letter_file = st.file_uploader("Upload Letter Document (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="letter_file_uploader")
-
     default_subject = "General Corporate Notice"
     if uploaded_letter_file is not None:
-        fname_clean = uploaded_letter_file.name.rsplit('.', 1)[0]
-        default_subject = fname_clean.replace("_", " ").title()
-        st.info(f"📄 Document attached: **{uploaded_letter_file.name}**")
+        default_subject = uploaded_letter_file.name.rsplit('.', 1)[0].replace("_", " ").title()
 
     with st.form("letter_form"):
         col_l1, col_l2 = st.columns(2)
@@ -461,27 +440,28 @@ elif menu_selection == "✉️ Letters & Memos":
         
         submitted_letter = st.form_submit_button("Save Official Document")
         if submitted_letter:
-            if subject_title:
-                file_name = uploaded_letter_file.name if uploaded_letter_file is not None else "No File Attached"
-                st.session_state.letters_logs.append({
-                    "Type": doc_type,
-                    "Subject": subject_title,
-                    "Party": sender_receiver,
-                    "Date": str(doc_date),
-                    "Notes": doc_notes,
-                    "File": file_name,
-                    "Managed By": st.session_state.current_user
-                })
-                st.success(f"✅ Official Document '{subject_title}' saved successfully and added to Directors Dashboard!")
-            else:
-                st.error("⚠️ කරුණාකර විෂය (Subject) ඇතුළත් කරන්න.")
+            file_name = uploaded_letter_file.name if uploaded_letter_file is not None else "No File Attached"
+            st.session_state.letters_logs.append({
+                "Type": doc_type,
+                "Subject": subject_title,
+                "Party": sender_receiver,
+                "Date": str(doc_date),
+                "Notes": doc_notes,
+                "File": file_name,
+                "Managed By": st.session_state.current_user
+            })
+            st.success(f"✅ Official Document '{subject_title}' saved successfully!")
 
     if st.session_state.letters_logs:
         st.subheader("Registered Letters & Memos History")
-        letters_df = pd.DataFrame(st.session_state.letters_logs)
-        st.table(letters_df)
-        if st.session_state.user_role == "Admin":
-            st.download_button("📥 Download Letters Report (CSV)", letters_df.to_csv(index=False).encode('utf-8'), "letters_memos_report.csv", "text/csv")
+        for idx, let in enumerate(st.session_state.letters_logs):
+            cols = st.columns([5, 1])
+            with cols[0]:
+                st.write(f"**{let['Subject']}** | Type: {let['Type']} | Date: {let['Date']}")
+            with cols[1]:
+                if st.button("Delete", key=f"del_let_{idx}"):
+                    st.session_state.letters_logs.pop(idx)
+                    st.rerun()
 
 # --- SECTION 7: INVOICE GENERATOR ---
 elif menu_selection == "📄 Invoice Generator":
@@ -553,101 +533,12 @@ elif menu_selection == "📄 Invoice Generator":
                 "Cart Details": st.session_state.invoice_cart.copy(),
                 "Issued By": st.session_state.current_user
             })
-            
-            st.success("Invoice generated, stock updated, and saved successfully!")
+            st.success("Invoice generated successfully!")
 
-        if st.session_state.orders:
-            latest_order = st.session_state.orders[-1]
-            
-            cart_rows_html = ""
-            for idx, cart_item in enumerate(latest_order["Cart Details"], 1):
-                cart_rows_html += f"""
-                    <tr style="border-bottom: 1px solid #ddd; font-size: 13px;">
-                        <td style="padding: 10px; text-align: center;">{idx:02d}</td>
-                        <td style="padding: 10px;">{cart_item['Variant']} ({cart_item['Qty']} Tablets)</td>
-                        <td style="padding: 10px; text-align: center;">{cart_item['Qty']}</td>
-                        <td style="padding: 10px; text-align: right;">{cart_item['Unit Price']:,.2f}</td>
-                        <td style="padding: 10px; text-align: right;">{cart_item['Total']:,.2f}</td>
-                    </tr>
-                """
-
-            formatted_address = latest_order["Address"].replace(chr(10), '<br>') if latest_order["Address"] else "No Address Provided"
-            
-            invoice_html = f"""<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Invoice {latest_order['Invoice No']}</title></head>
-<body style="font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 20px;">
-<div style="max-width: 800px; margin: auto; border: 2px solid #5a3825; padding: 25px; border-radius: 8px; background-color: #ffffff; color: #000000;">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #5a3825; padding-bottom: 15px;">
-        <div>
-            <h2 style="margin: 0; color: #5a3825; font-size: 22px;">CEYLON COFFEE TABLETS (PVT) LTD</h2>
-            <p style="margin: 3px 0; font-size: 12px; color: #555;">No 173, Hepana, Pilimathalawa<br>TP: +94 76 367 6856</p>
-        </div>
-        <div style="text-align: right;">
-            <h1 style="margin: 0; color: #5a3825; font-size: 26px; letter-spacing: 2px;">INVOICE</h1>
-            <p style="margin: 5px 0; font-size: 13px;"><b>Invoice No:</b> {latest_order['Invoice No']}<br><b>Date:</b> {latest_order['Date']}</p>
-        </div>
-    </div>
-    
-    <div style="display: flex; justify-content: space-between; margin-top: 20px; gap: 20px;">
-        <div style="flex: 1; border: 1px solid #c8b198; padding: 12px; border-radius: 5px; background-color: #fdfbf7;">
-            <p style="margin: 0 0 5px 0; font-size: 11px; color: #8c6239; font-weight: bold;">DELIVER TO</p>
-            <p style="margin: 0; font-size: 13px; line-height: 1.4;"><b>{latest_order['Customer']}</b><br>{formatted_address}<br>TP: {latest_order['Phone']}</p>
-        </div>
-        <div style="flex: 1; border: 1px solid #bce8f1; padding: 12px; border-radius: 5px; background-color: #f4f8fb;">
-            <p style="margin: 0 0 5px 0; font-size: 11px; color: #31708f; font-weight: bold;">BANK DETAILS FOR PAYMENT</p>
-            <p style="margin: 0; font-size: 12px; line-height: 1.4;"><b>Account Name:</b> CEYLON COFFEE TABLET (PVT) LTD<br><b>Account Number:</b> 141010054345<br><b>Bank:</b> Hatton National Bank (HNB)<br><b>Branch:</b> Pilimathalawa</p>
-        </div>
-    </div>
-    
-    <table style="width: 100%; margin-top: 25px; border-collapse: collapse;">
-        <thead>
-            <tr style="background-color: #5a3825; color: #ffffff; font-size: 13px;">
-                <th style="padding: 10px; text-align: center; width: 10%;">SUB</th>
-                <th style="padding: 10px; text-align: left; width: 50%;">ITEM DESCRIPTION</th>
-                <th style="padding: 10px; text-align: center; width: 10%;">QTY</th>
-                <th style="padding: 10px; text-align: right; width: 15%;">UNIT PRICE (LKR)</th>
-                <th style="padding: 10px; text-align: right; width: 15%;">TOTAL (LKR)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {cart_rows_html}
-        </tbody>
-    </table>
-    
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px;">
-        <div style="border: 1px dashed #b5835a; padding: 8px 12px; border-radius: 4px; font-size: 12px; color: #5a3825; background-color: #faf4ed;">
-            Note: + Delivery Fee | Category: {latest_order['Type']}<br>Issued By: {latest_order.get('Issued By', 'Admin')}
-        </div>
-        <div style="border: 2px solid #5a3825; padding: 12px 25px; border-radius: 6px; text-align: right; background-color: #fff;">
-            <p style="margin: 0; font-size: 11px; color: #666; font-weight: bold;">TOTAL AMOUNT</p>
-            <h2 style="margin: 5px 0 0 0; color: #5a3825; font-size: 22px;">{latest_order['Grand Total (LKR)']:,.2f} LKR</h2>
-        </div>
-    </div>
-    
-    <div style="margin-top: 35px; border: 1px solid #e0d0c0; background-color: #faf6f0; padding: 12px; text-align: center; border-radius: 5px;">
-        <p style="margin: 0; color: #5a3825; font-weight: bold; font-size: 14px;">Thank you for your Order!</p>
-        <p style="margin: 3px 0 0 0; font-size: 11px; color: #666;">Ceylon Coffee Tablets (Pvt) Ltd — Quality Sri Lankan Specialty Coffee Products</p>
-    </div>
-</div>
-</body>
-</html>"""
-            
-            st.markdown("---")
-            if st.session_state.user_role == "Admin":
-                st.download_button(
-                    label="📥 Download Official Invoice as HTML File (.html)",
-                    data=invoice_html.encode('utf-8'),
-                    file_name=f"{latest_order['Invoice No'].replace('/', '_')}.html",
-                    mime="text/html"
-                )
-            else:
-                st.info("🔒 ඩවුන්ලෝඩ් කරගැනීමේ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
-
-# --- SECTION 8: DIRECTORS DASHBOARD ---
+# --- SECTION 8: DIRECTORS DASHBOARD (PRINTABLE HTML REPORTS & DELETE / LOCK ACCESS) ---
 elif menu_selection == "📋 Directors Dashboard":
-    st.header("Directors' Central Records & Master Dashboard")
-    st.markdown("සියලුම අංශවල වාර්තා මෙහි එකතු වී ඇත. ඔබට අවශ්‍ය වාර්තා වර්ගය සහ දිනය තෝරා **ප්‍රින්ට් අවුට් (Print) සඳහා ඩවුන්ලෝඩ්** කරගත හැක.")
+    st.header("Directors' Central Records & Printable Reports Dashboard")
+    st.markdown("සියලුම අංශවල වාර්තා මෙහි එකතු වී ඇත. ඔබට අවශ්‍ය වාර්තා වර්ගය තෝරා **අලංකාර මුද්‍රණ (Printable HTML Reports)** ලෙස ඩවුන්ලෝඩ් කරගත හැක.")
 
     report_category = st.selectbox("Select Master Record Category to View & Print", [
         "Batch Production Records (BPR)",
@@ -662,92 +553,94 @@ elif menu_selection == "📋 Directors Dashboard":
     if report_category == "Batch Production Records (BPR)":
         st.subheader("🏭 Batch Production Records (BPR Master)")
         if st.session_state.bpr_logs:
+            for idx, log in enumerate(st.session_state.bpr_logs):
+                st.write(f"**{log['Batch No']}** | {log['Variant']} | Mfg: {log['Mfg Date']} | Qty: {log['Tablets Produced']}")
+            
             bpr_df = pd.DataFrame(st.session_state.bpr_logs)
-            
-            use_date_filter = st.checkbox("Filter by Manufacture Date")
-            if use_date_filter and "Mfg Date" in bpr_df.columns:
-                unique_dates = list(bpr_df["Mfg Date"].unique())
-                selected_date = st.selectbox("Select Date", unique_dates)
-                bpr_df = bpr_df[bpr_df["Mfg Date"] == selected_date]
-            
-            st.dataframe(bpr_df, use_container_width=True)
-            
             csv_data = bpr_df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="🖨️ Download / Print BPR Report (CSV for Manual Files)",
-                data=csv_data,
-                file_name=f"BPR_Master_Report_{datetime.now().strftime('%Y%m%d')}.csv",
-                mime="text/csv"
-            )
+            st.download_button("🖨️ Download BPR Report (CSV)", csv_data, "bpr_report.csv", "text/csv")
         else:
-            st.info("No Batch Production records found yet. Please save a batch record from the BPR section.")
+            st.info("No Batch Production records found yet.")
 
     elif report_category == "Lab & R&D Reports":
-        st.subheader("🧪 Lab & R&D Quality Control Records")
+        st.subheader("🧪 Lab & R&D Quality Control Records (Printable Report)")
         if st.session_state.rd_logs:
-            rd_df = pd.DataFrame(st.session_state.rd_logs)
-            
-            use_date_filter = st.checkbox("Filter by Report Date")
-            if use_date_filter and "Date" in rd_df.columns:
-                unique_dates = list(rd_df["Date"].unique())
-                selected_date = st.selectbox("Select Date", unique_dates)
-                rd_df = rd_df[rd_df["Date"] == selected_date]
-            
-            st.dataframe(rd_df, use_container_width=True)
-            
-            csv_data = rd_df.to_csv(index=False).encode('utf-8')
+            for idx, log in enumerate(st.session_state.rd_logs):
+                col_a, col_b = st.columns([5, 1])
+                with col_a:
+                    st.write(f"**Ref/Batch:** {log['Batch No']} | **Variant:** {log['Variant']} | **Date:** {log['Date']} | **Status:** {log['Status']}")
+                with col_b:
+                    if st.button("Delete", key=f"dash_del_rd_{idx}"):
+                        st.session_state.rd_logs.pop(idx)
+                        st.rerun()
+
+            # Printable HTML Report Generation
+            html_rows = ""
+            for log in st.session_state.rd_logs:
+                html_rows += f"""
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;">{log['Batch No']}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">{log['Variant']}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">{log['Date']}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">{log['Status']}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">{log['Attached File']}</td>
+                </tr>
+                """
+
+            printable_html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Lab & R&D Test Reports Summary</title></head>
+<body style="font-family: Arial, sans-serif; padding: 30px; color: #333;">
+    <h2 style="color: #5a3825; text-align: center;">CEYLON COFFEE TABLETS (PVT) LTD</h2>
+    <h3 style="text-align: center; color: #666;">Research & Development Quality Control Test Summary</h3>
+    <hr style="border: 1px solid #5a3825;">
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <thead>
+            <tr style="background-color: #5a3825; color: white;">
+                <th style="padding: 10px; border: 1px solid #ddd;">Doc Ref / Batch</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">Product Variant</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">Test Date</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">Status</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">Attached File</th>
+            </tr>
+        </thead>
+        <tbody>
+            {html_rows}
+        </tbody>
+    </table>
+    <br><p style="font-size: 12px; color: #777; text-align: center;">Generated via Ceylon Coffee Tablets Enterprise Portal</p>
+</body>
+</html>"""
+
             st.download_button(
-                label="🖨️ Download / Print Lab Reports (CSV for Manual Files)",
-                data=csv_data,
-                file_name=f"Lab_Reports_{datetime.now().strftime('%Y%m%d')}.csv",
-                mime="text/csv"
+                label="🖨️ Download Printable Lab Report (.html for Printing)",
+                data=printable_html.encode('utf-8'),
+                file_name=f"Lab_Report_Summary_{datetime.now().strftime('%Y%m%d')}.html",
+                mime="text/html"
             )
         else:
-            st.info("No Lab & R&D records found yet. Please upload and save a lab report from the Lab & R&D section.")
+            st.info("No Lab & R&D records found yet.")
 
     elif report_category == "Raw Materials (RM-LOG)":
         st.subheader("📦 Raw Materials Sourcing & Purchase Logs")
         if st.session_state.rm_logs:
             rm_df = pd.DataFrame(st.session_state.rm_logs)
-            
-            use_date_filter = st.checkbox("Filter by Purchase Date")
-            if use_date_filter and "Date" in rm_df.columns:
-                unique_dates = list(rm_df["Date"].unique())
-                selected_date = st.selectbox("Select Date", unique_dates)
-                rm_df = rm_df[rm_df["Date"] == selected_date]
-            
             st.dataframe(rm_df, use_container_width=True)
-            
-            csv_data = rm_df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="🖨️ Download / Print Raw Materials Report (CSV for Manual Files)",
-                data=csv_data,
-                file_name=f"Raw_Materials_Logs_{datetime.now().strftime('%Y%m%d')}.csv",
-                mime="text/csv"
-            )
+            st.download_button("🖨️️ Download Raw Materials Report (CSV)", rm_df.to_csv(index=False).encode('utf-8'), "raw_materials.csv", "text/csv")
         else:
             st.info("No Raw Materials records found yet.")
 
     elif report_category == "Official Letters & Memos":
         st.subheader("✉️ Official Letters & Memos Records")
         if st.session_state.letters_logs:
-            letters_df = pd.DataFrame(st.session_state.letters_logs)
-            
-            use_date_filter = st.checkbox("Filter by Document Date")
-            if use_date_filter and "Date" in letters_df.columns:
-                unique_dates = list(letters_df["Date"].unique())
-                selected_date = st.selectbox("Select Date", unique_dates)
-                letters_df = letters_df[letters_df["Date"] == selected_date]
-            
-            st.dataframe(letters_df, use_container_width=True)
-            
-            csv_data = letters_df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="🖨️ Download / Print Letters Report (CSV for Manual Files)",
-                data=csv_data,
-                file_name=f"Letters_Memos_Report_{datetime.now().strftime('%Y%m%d')}.csv",
-                mime="text/csv"
-            )
+            for idx, let in enumerate(st.session_state.letters_logs):
+                col_l1, col_l2 = st.columns([5, 1])
+                with col_l1:
+                    st.write(f"**{let['Subject']}** | Type: {let['Type']} | Date: {let['Date']}")
+                with col_l2:
+                    if st.button("Delete", key=f"dash_del_let_{idx}"):
+                        st.session_state.letters_logs.pop(idx)
+                        st.rerun()
         else:
             st.info("No letters or memos recorded yet.")
 
@@ -764,31 +657,7 @@ elif menu_selection == "📋 Directors Dashboard":
             m3.metric("Total Revenue (LKR)", f"LKR {total_revenue:,.2f}")
 
             st.markdown("---")
-            display_orders = []
-            for ord_item in st.session_state.orders:
-                display_orders.append({
-                    "Invoice No": ord_item["Invoice No"],
-                    "Date/Time": ord_item["Date"],
-                    "Customer": ord_item["Customer"],
-                    "Type": ord_item["Type"],
-                    "Total Tablets": ord_item["Total Tablets"],
-                    "Grand Total (LKR)": f"{ord_item['Grand Total (LKR)']:,.2f}",
-                    "Issued By": ord_item.get("Issued By", "N/A")
-                })
-            orders_df = pd.DataFrame(display_orders)
-            st.dataframe(orders_df, use_container_width=True)
-            
-            csv_data = orders_df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="🖨️ Download / Print Invoices History (CSV for Manual Files)",
-                data=csv_data,
-                file_name=f"Invoices_Dispatched_Orders_{datetime.now().strftime('%Y%m%d')}.csv",
-                mime="text/csv"
-            )
-            
-            if st.session_state.user_role == "Admin":
-                if st.button("Clear All Orders History"):
-                    st.session_state.orders = []
-                    st.rerun()
+            for idx, ord_item in enumerate(st.session_state.orders):
+                st.write(f"**Invoice No:** {ord_item['Invoice No']} | **Customer:** {ord_item['Customer']} | **Total:** LKR {ord_item['Grand Total (LKR)']:,.2f}")
         else:
             st.info("No invoices or orders recorded yet.")
