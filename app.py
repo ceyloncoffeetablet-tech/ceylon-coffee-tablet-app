@@ -98,6 +98,7 @@ st.sidebar.subheader("Navigation Menu")
 menu_selection = st.sidebar.radio(
     "Select Section", 
     [
+        "🏠 Welcome & Overview", 
         "📊 Cost & Pricing", 
         "🏭 Batch Production (BPR)", 
         "📦 Stores & Stock", 
@@ -121,11 +122,32 @@ if st.sidebar.button("Logout"):
     st.session_state.user_role = ""
     st.rerun()
 
-st.title("Ceylon Coffee Tablets (Pvt) Ltd - Enterprise System")
-st.markdown("*Drop it. Dissolve it. Done. | Corporate Management Portal*")
+# --- SECTION 0: WELCOME & OVERVIEW (HOME PAGE) ---
+if menu_selection == "🏠 Welcome & Overview":
+    st.title("Ceylon Coffee Tablets (Pvt) Ltd")
+    st.markdown("### *Drop it. Dissolve it. Done. | Premium Sri Lankan Specialty Coffee Innovation*")
+    st.markdown("---")
+    
+    col_w1, col_w2 = st.columns(2)
+    with col_w1:
+        st.markdown("""
+        ### අපගේ සංකල්පය සහ නිෂ්පාදනය
+        ශ්‍රී ලංකාවේ උසස්ම තත්වයේ අරාබිකා (Arabica) කෝපි බීජ මෙන්ම කුරුඳු (Cinnamon) සහ ඉඟුරු (Ginger) සාරය එකතු කරමින්, නවීන තාක්ෂණය යටතේ නිෂ්පාදනය කරනු ලබන **දියවන කෝපි ටැබ්ලට් (Soluble Coffee Tablets)** නිෂ්පාදනයේ ප්‍රමුඛයා වන්නේ **Ceylon Coffee Tablet (Pvt) Ltd** අප ආයතනයයි.
+        
+        උණුසුම් ජලයට හෝ කිරිවලට පහසුවෙන් දියවන මෙම ටැබ්ලට් එකක ප්‍රමිතිය, නැවුම් බව සහ සුවඳ රැකගනිමින් දේශීය හා විදේශීය වෙළඳපොළ (උදා: ස්වීඩනය වැනි රටවල්) වෙත උසස්ම මට්ටමින් නිෂ්පාදන බෙදා හැරීම අපගේ අරමුණයි.
+        """)
+    with col_w2:
+        st.info("""
+        📌 **පද්ධතියේ ප්‍රධාන විශේෂාංග:**
+        - **ස්වයංක්‍රීය බැච් සහ කල් ඉකුත්වීමේ දිනය:** නිෂ්පාදන දිනය අනුව බැච් අංකය සහ මාස 8ක කල් ඉකුත්වීමේ දිනය ස්වයංක්‍රීයව හැදීම.
+        - **ස්ටොක් කළමනාකරණය (Stores & Stock):** අමුද්‍රව්‍ය මිලදී ගැනීම්, නිෂ්පාදනයට අමුද්‍රව්‍ය අඩුවීම සහ ඉන්වොයිසි හරහා ටැබ්ලට් අලෙවි වූ විට ස්ටොක් එක ස්වයංක්‍රීයව යාවත්කාලීන වීම.
+        - **ආරක්ෂිත කළමනාකරණය:** අධ්‍යක්ෂක මණ්ඩලයට සහ ඇඩ්මින්වරයාට පමණක් වෙන් වූ ආරක්ෂිත ප්‍රවේශය.
+        
+        👉 **කරුණාකර වම්පස ඇති මෙනුව (Sidebar Menu) භාවිතා කර ඔබට අවශ්‍ය අංශය වෙත පිවිසෙන්න.**
+        """)
 
 # --- SECTION 1: COST & PROFIT ANALYSIS ---
-if menu_selection == "📊 Cost & Pricing":
+elif menu_selection == "📊 Cost & Pricing":
     st.header("Tablet Production Cost & Profit Structure Analysis")
     
     if st.session_state.prices_locked:
