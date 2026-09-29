@@ -38,6 +38,8 @@ if 'rd_logs' not in st.session_state:
     st.session_state.rd_logs = []
 if 'rm_logs' not in st.session_state:
     st.session_state.rm_logs = []
+if 'letters_logs' not in st.session_state:
+    st.session_state.letters_logs = []
 if 'invoice_cart' not in st.session_state:
     st.session_state.invoice_cart = []
 
@@ -83,11 +85,12 @@ if st.sidebar.button("Logout"):
 st.title("Ceylon Coffee Tablets (Pvt) Ltd - Enterprise System")
 st.markdown("*Drop it. Dissolve it. Done. | Corporate Management Portal*")
 
-# Navigation Tabs
+# Navigation Tabs (Including Letters & Memos)
 tabs = st.tabs([
     "📊 Cost & Pricing (Secure)", 
     "🧪 Lab & R&D Reports", 
     "📦 Raw Materials (RM-LOG)", 
+    "✉️ Letters & Memos", 
     "📄 Professional Invoice Generator", 
     "📋 Directors & All Records"
 ])
@@ -101,7 +104,6 @@ with tabs[0]:
     else:
         st.info("🔓 පද්ධතිය දැනට Unlock කර ඇත. Admin කෙනෙකුට අවශ්‍ය වෙනස්කම් සිදු කර අවසානයේ එය Lock කළ හැක.")
 
-    # Admin Lock/Unlock Controls
     if st.session_state.user_role == "Admin":
         col_lk1, col_lk2 = st.columns(2)
         with col_lk1:
@@ -122,7 +124,6 @@ with tabs[0]:
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Cost Inputs")
-        # Disable inputs if locked or if user is not Admin
         is_disabled = st.session_state.prices_locked or (st.session_state.user_role != "Admin")
         
         mfg_input = st.number_input("Manufacturing Cost per Tablet (LKR)", value=float(st.session_state.mfg_cost), step=0.05, disabled=is_disabled)
@@ -169,7 +170,7 @@ with tabs[0]:
 # --- TAB 2: LAB / R&D REPORTS ---
 with tabs[1]:
     st.header("Lab & R&D Quality Control Reports (BPR-QC Master)")
-    st.markdown("පරීක්ෂණ වාර්තා සඳහා අවශ්‍ය ඡායාරූප (Photos) උඩුගත කර වාර්තාව සුරකින්න.")
+    st.markdown("පරීක්ෂණ වාර්තා සහ PDF දත්ත ඇතුළත් කර ඡායාරූප (Photos) සමඟ සුරකින්න.")
 
     with st.form("rd_form"):
         col1, col2, col3 = st.columns(3)
@@ -183,11 +184,11 @@ with tabs[1]:
             moisture = st.number_input("Moisture Level (%) [Standard < 4.0%]", value=3.5, step=0.1)
             qc_status = st.selectbox("Batch Status", ["APPROVED FOR RELEASE", "REJECTED / HOLD"])
 
-        uploaded_photo = st.file_uploader("Attach Lab Test / Report Photo", type=["png", "jpg", "jpeg"])
+        uploaded_photo = st.file_uploader("Attach Lab Test / Report PDF or Photo", type=["png", "jpg", "jpeg", "pdf"])
 
         submitted_rd = st.form_submit_button("Save R&D Report")
         if submitted_rd and batch_no:
-            photo_name = uploaded_photo.name if uploaded_photo else "No Photo"
+            file_name = uploaded_photo.name if uploaded_photo else "No File"
             st.session_state.rd_logs.append({
                 "Batch No": batch_no,
                 "Variant": variant,
@@ -195,10 +196,10 @@ with tabs[1]:
                 "Coffee Weight (kg)": coffee_wt,
                 "Moisture": f"{moisture}%",
                 "Status": qc_status,
-                "Attached Photo": photo_name,
+                "Attached File": file_name,
                 "Recorded By": st.session_state.current_user
             })
-            st.success("R&D Report Saved Successfully with Photo!")
+            st.success("R&D Report Saved Successfully!")
 
     if st.session_state.rd_logs:
         st.subheader("Saved R&D Logs")
@@ -240,8 +241,47 @@ with tabs[2]:
         st.table(rm_df)
         st.download_button("📥 Download Raw Materials Report (CSV)", rm_df.to_csv(index=False).encode('utf-8'), "raw_materials_report.csv", "text/csv")
 
-# --- TAB 4: PROFESSIONAL INVOICE GENERATOR ---
+# --- TAB 4: OFFICIAL LETTERS & MEMOS (SECURE DIRECTORS ACCESS) ---
 with tabs[3]:
+    st.header("Official Letters, Inbound/Outbound Memos & Documents")
+    st.markdown("ආයතනයට ලැබෙන හෝ ආයතනයෙන් යවන නිල ලිපි සහ මීමොස් (Letters & Memos) ආරක්ෂිතව ගබඩා කර පරීක්ෂා කරන්න.")
+
+    with st.form("letter_form"):
+        col_l1, col_l2 = st.columns(2)
+        with col_l1:
+            doc_type = st.selectbox("Document Type", ["Inbound Letter (לැබුණු ලිපිය)", "Outbound Memo (යැවූ ලිපිය/මීමොව)", "Corporate Notice"])
+            subject_title = st.text_input("Subject / Title (විෂය)")
+            sender_receiver = st.text_input("Sender / Recipient Name (අදාළ පාර්ශ්වය)")
+        with col_l2:
+            doc_date = st.date_input("Document Date")
+            uploaded_doc = st.file_uploader("Upload Letter Document (PDF / Image)", type=["png", "jpg", "jpeg", "pdf"])
+            
+        doc_notes = st.text_area("Key Notes / Summary (සටහන්)")
+        
+        submitted_letter = st.form_submit_button("Save Official Document")
+        if submitted_letter and subject_title:
+            file_name = uploaded_doc.name if uploaded_doc else "No File"
+            st.session_state.letters_logs.append({
+                "Type": doc_type,
+                "Subject": subject_title,
+                "Party": sender_receiver,
+                "Date": str(doc_date),
+                "Notes": doc_notes,
+                "File": file_name,
+                "Managed By": st.session_state.current_user
+            })
+            st.success("Official Letter/Memo Saved Successfully!")
+
+    if st.session_state.letters_logs:
+        st.subheader("Registered Letters & Memos History")
+        letters_df = pd.DataFrame(st.session_state.letters_logs)
+        st.table(letters_df)
+        st.download_button("📥 Download Letters & Memos Report (CSV)", letters_df.to_csv(index=False).encode('utf-8'), "letters_memos_report.csv", "text/csv")
+    else:
+        st.info("No letters or memos recorded yet.")
+
+# --- TAB 5: PROFESSIONAL INVOICE GENERATOR ---
+with tabs[4]:
     st.header("Official Invoice Generator (Tablets Quantity-wise)")
     st.markdown("ඉන්වොයිස් අංකය **CCT-** යටතේ ඇතුළත් කර, බහු කෝපි වර්ග එකින් එක කාර්ට් එකට එකතු කරගත හැක.")
 
@@ -396,8 +436,8 @@ with tabs[3]:
             
             st.info("💡 **PDF ලෙස ලබා ගැනීමට:** ඉහත ඩවුන්ලෝඩ් කරගත් HTML ගොනුව ඔබගේ බ්‍රව්සරයෙන් විවෘත කර, **`Ctrl + P`** ඔබා **'Save as PDF'** තෝරාගෙන PDF එකක් ලෙස සේව් කරගන්න.")
 
-# --- TAB 5: DIRECTORS & ALL RECORDS ---
-with tabs[4]:
+# --- TAB 6: DIRECTORS & ALL RECORDS ---
+with tabs[5]:
     st.header("Directors' Management Report & All Orders History")
     st.markdown("මාසිකව සහ දිනපතා නිකුත් කළ ටැබ්ලට් ප්‍රමාණයන් සහ ඇණවුම් වාර්තා මෙහි දැක්වේ.")
 
