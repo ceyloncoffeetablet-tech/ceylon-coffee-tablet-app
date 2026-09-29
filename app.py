@@ -88,15 +88,32 @@ if not st.session_state.logged_in:
                     st.error("Invalid Passcode! Please check your credentials.")
     st.stop()
 
-# --- SIDEBAR USER & STATUS ---
-st.sidebar.title("System Status")
+# --- SIDEBAR NAVIGATION MENU ---
+st.sidebar.title("Ceylon Coffee Portal")
 st.sidebar.write(f"👤 **User:** {st.session_state.current_user}")
 st.sidebar.write(f"🛡️ **Role:** {st.session_state.user_role}")
+st.sidebar.markdown("---")
 
+st.sidebar.subheader("Navigation Menu")
+menu_selection = st.sidebar.radio(
+    "Select Section", 
+    [
+        "📊 Cost & Pricing", 
+        "🏭 Batch Production (BPR)", 
+        "📦 Stores & Stock", 
+        "🧪 Lab & R&D Reports", 
+        "🤝 Dealers Directory", 
+        "✉️ Letters & Memos", 
+        "📄 Invoice Generator", 
+        "📋 Directors Dashboard"
+    ]
+)
+
+st.sidebar.markdown("---")
 if st.session_state.prices_locked:
-    st.sidebar.error("🔒 Cost & Pricing Structure is **LOCKED**")
+    st.sidebar.error("🔒 Cost & Pricing is **LOCKED**")
 else:
-    st.sidebar.success("🔓 Cost & Pricing Structure is **UNLOCKED**")
+    st.sidebar.success("🔓 Cost & Pricing is **UNLOCKED**")
 
 if st.sidebar.button("Logout"):
     st.session_state.logged_in = False
@@ -107,20 +124,8 @@ if st.sidebar.button("Logout"):
 st.title("Ceylon Coffee Tablets (Pvt) Ltd - Enterprise System")
 st.markdown("*Drop it. Dissolve it. Done. | Corporate Management Portal*")
 
-# Navigation Tabs
-tabs = st.tabs([
-    "📊 Cost & Pricing", 
-    "🏭 Batch Production (BPR)", 
-    "📦 Stores & Stock", 
-    "🧪 Lab & R&D", 
-    "🤝 Dealers Directory", 
-    "✉️ Letters & Memos", 
-    "📄 Invoice Generator", 
-    "📋 Directors Dashboard"
-])
-
-# --- TAB 1: COST & PROFIT ANALYSIS & LOCK CONTROL ---
-with tabs[0]:
+# --- SECTION 1: COST & PROFIT ANALYSIS ---
+if menu_selection == "📊 Cost & Pricing":
     st.header("Tablet Production Cost & Profit Structure Analysis")
     
     if st.session_state.prices_locked:
@@ -193,8 +198,8 @@ with tabs[0]:
     else:
         st.info("🔒 ඩවුන්ලෝඩ් කරගැනීමේ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
-# --- TAB 2: BATCH PRODUCTION RECORD (BPR MASTER) ---
-with tabs[1]:
+# --- SECTION 2: BATCH PRODUCTION RECORD (BPR MASTER) ---
+elif menu_selection == "🏭 Batch Production (BPR)":
     st.header("Batch Production Record (BPR) Master System")
     st.markdown("නිෂ්පාදන දිනය (Mfg Date) ඇතුළත් කළ විට බැච් අංකය (`CCTYYMMDD`) සහ කල් ඉකුත්වීමේ දිනය (මාස 8කින්) ස්වයංක්‍රීයව ජනනය වේ.")
 
@@ -266,8 +271,8 @@ with tabs[1]:
         if st.session_state.user_role == "Admin":
             st.download_button("📥 Download BPR Logs (CSV)", bpr_df.to_csv(index=False).encode('utf-8'), "bpr_master_logs.csv", "text/csv")
 
-# --- TAB 3: STORES & STOCK (LINKED INVENTORY) ---
-with tabs[2]:
+# --- SECTION 3: STORES & STOCK ---
+elif menu_selection == "📦 Stores & Stock":
     st.header("Stores & Stock Management (Raw Materials & Tablets)")
     st.markdown("අමුද්‍රව්‍ය ස්ටොක් සහ නිම කළ ටැබ්ලට් ස්ටොක් ශේෂයන් මෙහි දැක්වේ.")
 
@@ -309,8 +314,8 @@ with tabs[2]:
             })
             st.success(f"Added {r_qty} of {r_item} to stores successfully!")
 
-# --- TAB 4: LAB & R&D REPORTS (WITH FILE UPLOADER) ---
-with tabs[3]:
+# --- SECTION 4: LAB & R&D REPORTS ---
+elif menu_selection == "🧪 Lab & R&D Reports":
     st.header("Lab & R&D Quality Control Reports")
     with st.form("rd_form"):
         col1, col2, col3 = st.columns(3)
@@ -348,8 +353,8 @@ with tabs[3]:
         if st.session_state.user_role == "Admin":
             st.download_button("📥 Download R&D Reports (CSV)", rd_df.to_csv(index=False).encode('utf-8'), "rd_logs_report.csv", "text/csv")
 
-# --- TAB 5: DEALERS DIRECTORY (ADMIN ONLY) ---
-with tabs[4]:
+# --- SECTION 5: DEALERS DIRECTORY ---
+elif menu_selection == "🤝 Dealers Directory":
     st.header("Local & Foreign Dealers Directory (Secure Confidential)")
     
     if st.session_state.user_role == "Admin":
@@ -393,8 +398,8 @@ with tabs[4]:
     else:
         st.error("🔒 රහස්‍යභාවය සුරක්ෂිත කිරීම සඳහා ඩීලර්ස් නාමාවලිය බැලීමේ සහ ඇතුළත් කිරීමේ පූර්ණ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
-# --- TAB 6: OFFICIAL LETTERS & MEMOS (WITH FILE UPLOADER) ---
-with tabs[5]:
+# --- SECTION 6: LETTERS & MEMOS ---
+elif menu_selection == "✉️ Letters & Memos":
     st.header("Official Letters, Inbound/Outbound Memos & Documents")
     with st.form("letter_form"):
         col_l1, col_l2 = st.columns(2)
@@ -429,8 +434,8 @@ with tabs[5]:
         if st.session_state.user_role == "Admin":
             st.download_button("📥 Download Letters Report (CSV)", letters_df.to_csv(index=False).encode('utf-8'), "letters_memos_report.csv", "text/csv")
 
-# --- TAB 7: PROFESSIONAL INVOICE GENERATOR ---
-with tabs[6]:
+# --- SECTION 7: INVOICE GENERATOR ---
+elif menu_selection == "📄 Invoice Generator":
     st.header("Official Invoice Generator (Tablets Quantity-wise)")
     col_inf1, col_inf2 = st.columns(2)
     with col_inf1:
@@ -590,8 +595,8 @@ with tabs[6]:
             else:
                 st.info("🔒 ඩවුන්ලෝඩ් කරගැනීමේ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
-# --- TAB 8: DIRECTORS & FILTERABLE RECORDS DASHBOARD ---
-with tabs[7]:
+# --- SECTION 8: DIRECTORS DASHBOARD ---
+elif menu_selection == "📋 Directors Dashboard":
     st.header("Directors' Filterable Records & Management Dashboard")
     st.markdown("අධ්‍යක්ෂකවරුන්ට අවශ්‍ය වාර්තා වර්ගය තෝරා (Filter කර) නැරඹිය හැක.")
 
@@ -613,7 +618,7 @@ with tabs[7]:
             if st.session_state.user_role == "Admin":
                 st.download_button("📥 Download BPR Logs (CSV)", bpr_df.to_csv(index=False).encode('utf-8'), "bpr_logs.csv", "text/csv")
         else:
-            st.info("No Batch Production records found.")
+            st.info("No Batch Production records found yet.")
 
     elif report_category == "Lab & R&D Reports":
         st.subheader("🧪 Lab & R&D Quality Control Records")
@@ -623,7 +628,7 @@ with tabs[7]:
             if st.session_state.user_role == "Admin":
                 st.download_button("📥 Download Lab Reports (CSV)", rd_df.to_csv(index=False).encode('utf-8'), "lab_reports.csv", "text/csv")
         else:
-            st.info("No Lab & R&D records found.")
+            st.info("No Lab & R&D records found yet.")
 
     elif report_category == "Raw Materials (RM-LOG)":
         st.subheader("📦 Raw Materials Inventory & Sourcing Records")
@@ -633,7 +638,7 @@ with tabs[7]:
             if st.session_state.user_role == "Admin":
                 st.download_button("📥 Download Raw Materials Report (CSV)", rm_df.to_csv(index=False).encode('utf-8'), "raw_materials.csv", "text/csv")
         else:
-            st.info("No Raw Materials records found.")
+            st.info("No Raw Materials records found yet.")
 
     elif report_category == "Official Letters & Memos":
         st.subheader("✉️ Official Letters & Memos Records")
@@ -643,7 +648,7 @@ with tabs[7]:
             if st.session_state.user_role == "Admin":
                 st.download_button("📥 Download Letters Report (CSV)", letters_df.to_csv(index=False).encode('utf-8'), "letters_memos.csv", "text/csv")
         else:
-            st.info("No letters or memos recorded.")
+            st.info("No letters or memos recorded yet.")
 
     elif report_category == "Invoices & Dispatched Orders":
         st.subheader("📄 Invoices & Dispatched Orders Ledger")
