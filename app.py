@@ -20,17 +20,45 @@ if 'current_user' not in st.session_state:
 if 'user_role' not in st.session_state:
     st.session_state.user_role = ""
 
-# Session State Initialization
-if 'retail_price' not in st.session_state:
-    st.session_state.retail_price = 50.00
-if 'trade_price' not in st.session_state:
-    st.session_state.trade_price = 42.00
-if 'mfg_cost' not in st.session_state:
-    st.session_state.mfg_cost = 41.95
-if 'courier_cost' not in st.session_state:
-    st.session_state.courier_cost = 4.05
-if 'prices_locked' not in st.session_state:
-    st.session_state.prices_locked = False
+# Session State Initialization for Editable Unit Cost & Sweden Case Study
+if 'workers_count' not in st.session_state:
+    st.session_state.workers_count = 2
+if 'worker_salary' not in st.session_state:
+    st.session_state.worker_salary = 35000.0
+if 'worker_allowance' not in st.session_state:
+    st.session_state.worker_allowance = 150.0
+if 'working_days' not in st.session_state:
+    st.session_state.working_days = 20
+if 'daily_target_per_worker' not in st.session_state:
+    st.session_state.daily_target_per_worker = 400
+
+if 'elec_rent' not in st.session_state:
+    st.session_state.elec_rent = 5000.0
+if 'water_cost' not in st.session_state:
+    st.session_state.water_cost = 1000.0
+if 'gas_cost' not in st.session_state:
+    st.session_state.gas_cost = 800.0
+if 'transport_cost' not in st.session_state:
+    st.session_state.transport_cost = 5000.0
+if 'safety_consumables' not in st.session_state:
+    st.session_state.safety_consumables = 16000.0
+
+if 'sweden_qty' not in st.session_state:
+    st.session_state.sweden_qty = 650
+if 'sweden_selling_price' not in st.session_state:
+    st.session_state.sweden_selling_price = 50.00
+if 'light_coffee_cost' not in st.session_state:
+    st.session_state.light_coffee_cost = 8500.0
+if 'dark_coffee_cost' not in st.session_state:
+    st.session_state.dark_coffee_cost = 7500.0
+if 'ginger_coffee_cost' not in st.session_state:
+    st.session_state.ginger_coffee_cost = 1000.0
+if 'cinnamon_cost' not in st.session_state:
+    st.session_state.cinnamon_cost = 1800.0
+if 'sugar_cost' not in st.session_state:
+    st.session_state.sugar_cost = 44.0
+if 'courier_packaging_cost' not in st.session_state:
+    st.session_state.courier_packaging_cost = 2632.50
 
 if 'orders' not in st.session_state:
     st.session_state.orders = []
@@ -118,11 +146,6 @@ menu_selection = st.sidebar.radio(
 )
 
 st.sidebar.markdown("---")
-if st.session_state.prices_locked:
-    st.sidebar.error("🔒 Cost & Pricing is **LOCKED**")
-else:
-    st.sidebar.success("🔓 Cost & Pricing is **UNLOCKED**")
-
 if st.sidebar.button("Logout"):
     st.session_state.logged_in = False
     st.session_state.current_user = ""
@@ -134,160 +157,122 @@ if menu_selection == "🏠 Welcome & Overview":
     st.title("Ceylon Coffee Tablets (Pvt) Ltd")
     st.markdown("### *Drop it. Dissolve it. Done. | Premium Sri Lankan Specialty Coffee Innovation*")
     st.markdown("---")
-    
-    col_w1, col_w2 = st.columns(2)
-    with col_w1:
-        st.markdown("""
-        ### අපගේ සංකල්පය සහ නිෂ්පාදනය
-        ශ්‍රී ලංකාවේ උසස්ම තත්වයේ අරාබිකා කෝපි බීජ මෙන්ම කුරුඳු සහ ඉඟුරු සාරය එකතු කරමින්, නවීන තාක්ෂණය යටතේ නිෂ්පාදනය කරනු ලබන **දියවන කෝපි ටැබ්ලට් (Soluble Coffee Tablets)** නිෂ්පාදනයේ ප්‍රමුඛයා වන්නේ **Ceylon Coffee Tablet (Pvt) Ltd** අප ආයතනයයි.
-        """)
-    with col_w2:
-        st.info("""
-        📌 **ප්‍රධාන වාර්තා ටැබ් දෙක:**
-        1. **Unit Cost & Profitability Analysis:** කම්කරු ශ්‍රම පිරිවැය, මාසික නිෂ්පාදන ධාරිතාව, පොදු උපයෝගिता වියදම් (Electricity, Water, Gas, Gloves, Masks) සහ ටැබ්ලට් එකක පිරිවැය ගණනය කිරීමේ නිල ආකෘතිය.
-        2. **Sweden Export Order Cost Report:** ස්වීඩන් අපනයන ඇණවුම සඳහා අමුද්‍රව්‍ය පිරිවැය, මුළු පිරිවැය සහ ශුද්ධ ලාභය දැක්වෙන ආකෘතිය.
-        """)
+    st.info("📌 සියලුම කොස්ට් සහ මිල ගණන් දැන් ඔබට අවශ්‍ය පරිදි **Edit** කර ස්වයංක්‍රීය ගණනය කිරීම් ලබාගත හැක.")
 
-# --- SECTION 1: UNIT COST & PROFITABILITY ANALYSIS ---
+# --- SECTION 1: EDITABLE UNIT COST & PROFITABILITY ANALYSIS ---
 elif menu_selection == "📊 Unit Cost & Profitability Analysis":
-    st.header("Unit Cost & Profitability Analysis")
-    st.markdown("Comprehensive Tablet Production & Order Financial Breakdown (Drop it. Dissolve it. Done.)")
+    st.header("Unit Cost & Profitability Analysis (Editable)")
+    st.markdown("කම්කරු ශ්‍රම පිරිවැය, වැටුප් සහ පොදු උපයෝගීතා වියදම් වෙනස් කර ක්ෂණික ප්‍රතිඵල ලබාගන්න.")
 
-    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-    col_m1.metric("Mfg. Cost / Tablet", "LKR 41.95")
-    col_m2.metric("Courier Cost / Tablet", "LKR 4.05")
-    col_m3.metric("Total Cost / Tablet", "LKR 46.00")
-    col_m4.metric("Selling Price / Tablet", "LKR 50.00")
+    with st.form("unit_cost_edit_form"):
+        st.subheader("⚙️ 1. Labor & Staffing Cost Inputs")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            workers_count = st.number_input("Number of Workers", value=st.session_state.workers_count, step=1)
+            worker_salary = st.number_input("Monthly Salary per Worker (LKR)", value=st.session_state.worker_salary, step=1000.0)
+        with c2:
+            worker_allowance = st.number_input("Daily Snacks/Allowance per Worker (LKR)", value=st.session_state.worker_allowance, step=50.0)
+            working_days = st.number_input("Working Days per Month", value=st.session_state.working_days, step=1)
+        with c3:
+            daily_target_per_worker = st.number_input("Daily Tablets per Worker", value=st.session_state.daily_target_per_worker, step=10)
+
+        st.subheader("⚙️ 2. Operational Overheads & Consumables Inputs")
+        o1, o2, o3 = st.columns(3)
+        with o1:
+            elec_rent = st.number_input("Electricity & Rent (Monthly LKR)", value=st.session_state.elec_rent, step=500.0)
+            water_cost = st.number_input("Water Usage (Monthly LKR)", value=st.session_state.water_cost, step=100.0)
+        with o2:
+            gas_cost = st.number_input("LP Gas Usage (Monthly LKR)", value=st.session_state.gas_cost, step=100.0)
+            transport_cost = st.number_input("Fuel & Transport (Monthly LKR)", value=st.session_state.transport_cost, step=500.0)
+        with o3:
+            safety_consumables = st.number_input("Safety & Hygiene (Gloves/Masks/Hairnets LKR)", value=st.session_state.safety_consumables, step=1000.0)
+
+        save_unit_costs = st.form_submit_button("Update & Recalculate Unit Costs")
+        if save_unit_costs:
+            st.session_state.workers_count = workers_count
+            st.session_state.worker_salary = worker_salary
+            st.session_state.worker_allowance = worker_allowance
+            st.session_state.working_days = working_days
+            st.session_state.daily_target_per_worker = daily_target_per_worker
+            
+            st.session_state.elec_rent = elec_rent
+            st.session_state.water_cost = water_cost
+            st.session_state.gas_cost = gas_cost
+            st.session_state.transport_cost = transport_cost
+            st.session_state.safety_consumables = safety_consumables
+            st.success("Unit cost parameters updated successfully!")
+
+    # Calculations
+    monthly_target_capacity = st.session_state.workers_count * st.session_state.daily_target_per_worker * st.session_state.working_days
+    total_salaries = st.session_state.workers_count * st.session_state.worker_salary
+    total_allowance = st.session_state.workers_count * st.session_state.worker_allowance * st.session_state.working_days
+    total_labor_cost = total_salaries + total_allowance
+    cost_per_tablet_labor = total_labor_cost / monthly_target_capacity if monthly_target_capacity > 0 else 0
+
+    total_overheads = st.session_state.elec_rent + st.session_state.water_cost + st.session_state.gas_cost + st.session_state.transport_cost + st.session_state.safety_consumables
+    cost_per_tablet_overhead = total_overheads / monthly_target_capacity if monthly_target_capacity > 0 else 0
 
     st.markdown("---")
-    st.subheader("1. Labor & Staffing Cost Calculation")
-    
-    labor_data = [
-        {"Component / Operational Detail": "Productivity Rate", "Standard Calculation Basis": "60 Tablets/hr + 7 Productive hrs/day = 420 Tablets/day/person", "Monthly Amount (LKR)": "-", "Cost per Tablet (LKR)": "-"},
-        {"Component / Operational Detail": "Monthly Target Capacity", "Standard Calculation Basis": "2 Workers x 400 Tablets x 20 Working Days = 8,000 Tablets", "Monthly Amount (LKR)": "-", "Cost per Tablet (LKR)": "-"},
-        {"Component / Operational Detail": "Staff Salaries", "Standard Calculation Basis": "2 Workers x LKR 35,000 / month", "Monthly Amount (LKR)": "70,000.00", "Cost per Tablet (LKR)": "8.75"},
-        {"Component / Operational Detail": "Staff Snacks & Allowance", "Standard Calculation Basis": "2 Workers x LKR 150/day x 20 Days", "Monthly Amount (LKR)": "6,000.00", "Cost per Tablet (LKR)": "0.75"},
-        {"Component / Operational Detail": "Total Labor Cost (Monthly Basis: 8,000 Tablets)", "Standard Calculation Basis": "Combined Labor Expenses", "Monthly Amount (LKR)": "76,000.00", "Cost per Tablet (LKR)": "9.50"}
-    ]
-    st.table(pd.DataFrame(labor_data))
+    st.subheader("📋 Calculated Results Summary")
+    r1, r2, r3 = st.columns(3)
+    r1.metric("Monthly Target Capacity", f"{monthly_target_capacity:,} Tablets")
+    r2.metric("Labor Cost / Tablet", f"LKR {cost_per_tablet_labor:.2f}")
+    r3.metric("Overhead Cost / Tablet", f"LKR {cost_per_tablet_overhead:.2f}")
 
-    st.subheader("2. Operational Overheads & Consumables")
-    overhead_data = [
-        {"Cost Center / Expense Item": "Electricity & Rent", "Details / Consumption Rate": "Monthly Overhead allocation", "Monthly Cost (LKR)": "5,000.00", "Cost per Tablet (LKR)": "0.62"},
-        {"Cost Center / Expense Item": "Water Usage", "Details / Consumption Rate": "Monthly Utility charge", "Monthly Cost (LKR)": "1,000.00", "Cost per Tablet (LKR)": "0.12"},
-        {"Cost Center / Expense Item": "LP Gas Usage", "Details / Consumption Rate": "12.5 kg Gas cylinder allocation (LKR 4,800 / 6)", "Monthly Cost (LKR)": "800.00", "Cost per Tablet (LKR)": "0.10"},
-        {"Cost Center / Expense Item": "Fuel & Transport", "Details / Consumption Rate": "Transport & dispatch expenses", "Monthly Cost (LKR)": "5,000.00", "Cost per Tablet (LKR)": "0.62"},
-        {"Cost Center / Expense Item": "Safety & Hygiene Consumables", "Details / Consumption Rate": "Gloves (8,960) + Masks (1,600) + Hairnets (4,000) + Sanitizer", "Monthly Cost (LKR)": "16,000.00", "Cost per Tablet (LKR)": "2.00"},
-        {"Cost Center / Expense Item": "Total Operational Overheads (Per Tablet)", "Details / Consumption Rate": "Sum of all Overheads", "Monthly Cost (LKR)": "27,800.00", "Cost per Tablet (LKR)": "3.46"}
-    ]
-    st.table(pd.DataFrame(overhead_data))
-
-    unit_analysis_html = """<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Unit Cost & Profitability Analysis Report</title></head>
-<body style="font-family: Arial, sans-serif; padding: 30px; color: #333;">
-    <h2 style="color: #5a3825; text-align: center;">CEYLON COFFEE TABLETS (PVT) LTD</h2>
-    <h3 style="text-align: center; color: #666;">Unit Cost & Profitability Analysis Report</h3>
-    <hr style="border: 1px solid #5a3825;">
-    <h4>1. Labor & Staffing Cost Calculation</h4>
-    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-        <tr style="background-color: #5a3825; color: white;"><th style="padding: 8px; border: 1px solid #ddd;">Component</th><th style="padding: 8px; border: 1px solid #ddd;">Basis</th><th style="padding: 8px; border: 1px solid #ddd;">Monthly (LKR)</th><th style="padding: 8px; border: 1px solid #ddd;">Per Tablet (LKR)</th></tr>
-        <tr><td style="padding: 8px; border: 1px solid #ddd;">Staff Salaries</td><td style="padding: 8px; border: 1px solid #ddd;">2 Workers</td><td style="padding: 8px; border: 1px solid #ddd;">70,000.00</td><td style="padding: 8px; border: 1px solid #ddd;">8.75</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #ddd;">Staff Snacks & Allowance</td><td style="padding: 8px; border: 1px solid #ddd;">2 Workers x 20 Days</td><td style="padding: 8px; border: 1px solid #ddd;">6,000.00</td><td style="padding: 8px; border: 1px solid #ddd;">0.75</td></tr>
-        <tr style="font-weight: bold;"><td style="padding: 8px; border: 1px solid #ddd;">Total Labor Cost</td><td style="padding: 8px; border: 1px solid #ddd;">8,000 Tablets</td><td style="padding: 8px; border: 1px solid #ddd;">76,000.00</td><td style="padding: 8px; border: 1px solid #ddd;">9.50</td></tr>
-    </table>
-    <h4>2. Operational Overheads & Consumables</h4>
-    <table style="width: 100%; border-collapse: collapse;">
-        <tr style="background-color: #5a3825; color: white;"><th style="padding: 8px; border: 1px solid #ddd;">Expense Item</th><th style="padding: 8px; border: 1px solid #ddd;">Details</th><th style="padding: 8px; border: 1px solid #ddd;">Monthly (LKR)</th><th style="padding: 8px; border: 1px solid #ddd;">Per Tablet (LKR)</th></tr>
-        <tr><td style="padding: 8px; border: 1px solid #ddd;">Electricity & Rent</td><td style="padding: 8px; border: 1px solid #ddd;">Overhead allocation</td><td style="padding: 8px; border: 1px solid #ddd;">5,000.00</td><td style="padding: 8px; border: 1px solid #ddd;">0.62</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #ddd;">Water Usage</td><td style="padding: 8px; border: 1px solid #ddd;">Utility charge</td><td style="padding: 8px; border: 1px solid #ddd;">1,000.00</td><td style="padding: 8px; border: 1px solid #ddd;">0.12</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #ddd;">LP Gas Usage</td><td style="padding: 8px; border: 1px solid #ddd;">Gas cylinder allocation</td><td style="padding: 8px; border: 1px solid #ddd;">800.00</td><td style="padding: 8px; border: 1px solid #ddd;">0.10</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #ddd;">Fuel & Transport</td><td style="padding: 8px; border: 1px solid #ddd;">Dispatch expenses</td><td style="padding: 8px; border: 1px solid #ddd;">5,000.00</td><td style="padding: 8px; border: 1px solid #ddd;">0.62</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #ddd;">Safety & Hygiene (Gloves, Masks)</td><td style="padding: 8px; border: 1px solid #ddd;">Consumables</td><td style="padding: 8px; border: 1px solid #ddd;">16,000.00</td><td style="padding: 8px; border: 1px solid #ddd;">2.00</td></tr>
-        <tr style="font-weight: bold;"><td style="padding: 8px; border: 1px solid #ddd;">Total Operational Overheads</td><td style="padding: 8px; border: 1px solid #ddd;">Per Tablet</td><td style="padding: 8px; border: 1px solid #ddd;">27,800.00</td><td style="padding: 8px; border: 1px solid #ddd;">3.46</td></tr>
-    </table>
-</body>
-</html>"""
-
-    st.download_button(
-        label="🖨️ Download Unit Cost Analysis Report (.html for Printing)",
-        data=unit_analysis_html.encode('utf-8'),
-        file_name=f"Unit_Cost_Analysis_{datetime.now().strftime('%Y%m%d')}.html",
-        mime="text/html"
-    )
-
-# --- SECTION 2: SWEDEN EXPORT ORDER COST REPORT ---
+# --- SECTION 2: EDITABLE SWEDEN EXPORT ORDER COST REPORT ---
 elif menu_selection == "📦 Sweden Export Order Cost Report":
-    st.header("Case Study: Sweden Export Order Cost Report (QTY: 650 Tablets)")
-    st.markdown("ස්වීඩන් අපනයන ඇණවුම සඳහා අමුද්‍රව්‍ය පිරිවැය, ශ්‍රම පිරිවැය, පොදු වියදම් සහ ශුද්ධ ලාභය දැක්වෙන නිල වාර්තාව.")
+    st.header("Case Study: Sweden Export Order Cost Report (Editable)")
+    st.markdown("අපනයන ඇණවුම් ප්‍රමාණය, අමුද්‍රව්‍ය මිල සහ ඩිලිවරි වියදම් වෙනස් කර ලාභය ගණනය කරන්න.")
 
-    sweden_rm_data = [
-        {"#": 1, "Raw Material / Cost Component": "Light Roasted Coffee", "Quantity / Weight": "500 g", "Total Cost (LKR)": "8,500.00", "Cost per Tablet (LKR)": "13.08"},
-        {"#": 2, "Raw Material / Cost Component": "Dark Roasted Coffee", "Quantity / Weight": "500 g", "Total Cost (LKR)": "7,500.00", "Cost per Tablet (LKR)": "11.54"},
-        {"#": 3, "Raw Material / Cost Component": "Ginger Coffee", "Quantity / Weight": "300 g", "Total Cost (LKR)": "1,000.00", "Cost per Tablet (LKR)": "1.54"},
-        {"#": 4, "Raw Material / Cost Component": "Cinnamon Powder", "Quantity / Weight": "100 g", "Total Cost (LKR)": "1,800.00", "Cost per Tablet (LKR)": "2.77"},
-        {"#": 5, "Raw Material / Cost Component": "Sugar", "Quantity / Weight": "200 g", "Total Cost (LKR)": "44.00", "Cost per Tablet (LKR)": "0.07"},
-        {"#": "A", "Raw Material / Cost Component": "Total Raw Material Cost", "Quantity / Weight": "-", "Total Cost (LKR)": "18,844.00", "Cost per Tablet (LKR)": "28.99"},
-        {"#": "B", "Raw Material / Cost Component": "Direct Labor Cost (650 x LKR 9.50)", "Quantity / Weight": "-", "Total Cost (LKR)": "6,175.00", "Cost per Tablet (LKR)": "9.50"},
-        {"#": "C", "Raw Material / Cost Component": "Operational Overhead & Utilities (650 x LKR 3.46)", "Quantity / Weight": "-", "Total Cost (LKR)": "2,249.00", "Cost per Tablet (LKR)": "3.46"},
-        {"#": "-", "Raw Material / Cost Component": "Total Manufacturing Cost (650 Tablets)", "Quantity / Weight": "-", "Total Cost (LKR)": "LKR 27,268.00", "Cost per Tablet (LKR)": "LKR 41.95"},
-        {"#": "D", "Raw Material / Cost Component": "Courier, Packaging Box & Wrapping Charges", "Quantity / Weight": "-", "Total Cost (LKR)": "2,632.50", "Cost per Tablet (LKR)": "4.05"},
-        {"#": "-", "Raw Material / Cost Component": "TOTAL LANDED COST (Manufacturing + Delivery)", "Quantity / Weight": "-", "Total Cost (LKR)": "LKR 29,900.00", "Cost per Tablet (LKR)": "LKR 46.00"}
-    ]
-    st.table(pd.DataFrame(sweden_rm_data))
+    with st.form("sweden_edit_form"):
+        s1, s2 = st.columns(2)
+        with s1:
+            sweden_qty = st.number_input("Order Quantity (Tablets)", value=st.session_state.sweden_qty, step=10)
+            sweden_selling_price = st.number_input("Selling Price per Tablet (LKR)", value=st.session_state.sweden_selling_price, step=0.50)
+            light_coffee_cost = st.number_input("Light Roasted Coffee Total Cost (LKR)", value=st.session_state.light_coffee_cost, step=100.0)
+            dark_coffee_cost = st.number_input("Dark Roasted Coffee Total Cost (LKR)", value=st.session_state.dark_coffee_cost, step=100.0)
+        with s2:
+            ginger_coffee_cost = st.number_input("Ginger Coffee Total Cost (LKR)", value=st.session_state.ginger_coffee_cost, step=100.0)
+            cinnamon_cost = st.number_input("Cinnamon Powder Total Cost (LKR)", value=st.session_state.cinnamon_cost, step=100.0)
+            sugar_cost = st.number_input("Sugar Total Cost (LKR)", value=st.session_state.sugar_cost, step=10.0)
+            courier_packaging_cost = st.number_input("Courier & Packaging Charges (LKR)", value=st.session_state.courier_packaging_cost, step=100.0)
 
-    st.success("""
-    ### 🇸🇪 SWEDEN ORDER FINANCIAL SUMMARY (650 TABLETS)
-    - **Total Revenue (650 Tablets @ LKR 50.00/ea):** LKR 32,500.00
-    - **Total Cost (650 Tablets @ LKR 46.00/ea):** LKR 29,900.00
+        save_sweden = st.form_submit_button("Update & Calculate Sweden Order")
+        if save_sweden:
+            st.session_state.sweden_qty = sweden_qty
+            st.session_state.sweden_selling_price = sweden_selling_price
+            st.session_state.light_coffee_cost = light_coffee_cost
+            st.session_state.dark_coffee_cost = dark_coffee_cost
+            st.session_state.ginger_coffee_cost = ginger_coffee_cost
+            st.session_state.cinnamon_cost = cinnamon_cost
+            st.session_state.sugar_cost = sugar_cost
+            st.session_state.courier_packaging_cost = courier_packaging_cost
+            st.success("Sweden Export Order parameters updated successfully!")
+
+    # Sweden Calculations
+    total_rm_cost = (st.session_state.light_coffee_cost + 
+                     st.session_state.dark_coffee_cost + 
+                     st.session_state.ginger_coffee_cost + 
+                     st.session_state.cinnamon_cost + 
+                     st.session_state.sugar_cost)
     
-    ### 💰 NET PROFIT: LKR 2,600.00
-    *(Margin: 8.00% / LKR 4.00 per tablet)*
-    """)
+    # Assume proportional labor & overhead from previous tab or standard rate (e.g. 9.50 + 3.46 = 12.96 per tablet)
+    total_labor_order = st.session_state.sweden_qty * 9.50
+    total_overhead_order = st.session_state.sweden_qty * 3.46
+    total_mfg_cost = total_rm_cost + total_labor_order + total_overhead_order
+    total_landed_cost = total_mfg_cost + st.session_state.courier_packaging_cost
+    
+    cost_per_tablet_landed = total_landed_cost / st.session_state.sweden_qty if st.session_state.sweden_qty > 0 else 0
+    total_revenue = st.session_state.sweden_qty * st.session_state.sweden_selling_price
+    net_profit_sweden = total_revenue - total_landed_cost
+    profit_per_tablet = net_profit_sweden / st.session_state.sweden_qty if st.session_state.sweden_qty > 0 else 0
 
-    sweden_html = f"""<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Sweden Export Order Cost Report</title></head>
-<body style="font-family: Arial, sans-serif; padding: 30px; color: #333;">
-    <h2 style="color: #5a3825; text-align: center;">CEYLON COFFEE TABLETS (PVT) LTD</h2>
-    <h3 style="text-align: center; color: #666;">Case Study: Sweden Export Order Cost Report (QTY: 650 Tablets)</h3>
-    <hr style="border: 1px solid #5a3825;">
-    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-        <tr style="background-color: #5a3825; color: white;">
-            <th style="padding: 8px; border: 1px solid #ddd;">#</th>
-            <th style="padding: 8px; border: 1px solid #ddd;">Raw Material / Cost Component</th>
-            <th style="padding: 8px; border: 1px solid #ddd;">Quantity / Weight</th>
-            <th style="padding: 8px; border: 1px solid #ddd;">Total Cost (LKR)</th>
-            <th style="padding: 8px; border: 1px solid #ddd;">Cost per Tablet (LKR)</th>
-        </tr>
-        <tr><td style="padding: 6px; border: 1px solid #ddd;">1</td><td style="padding: 6px; border: 1px solid #ddd;">Light Roasted Coffee</td><td style="padding: 6px; border: 1px solid #ddd;">500 g</td><td style="padding: 6px; border: 1px solid #ddd;">8,500.00</td><td style="padding: 6px; border: 1px solid #ddd;">13.08</td></tr>
-        <tr><td style="padding: 6px; border: 1px solid #ddd;">2</td><td style="padding: 6px; border: 1px solid #ddd;">Dark Roasted Coffee</td><td style="padding: 6px; border: 1px solid #ddd;">500 g</td><td style="padding: 6px; border: 1px solid #ddd;">7,500.00</td><td style="padding: 6px; border: 1px solid #ddd;">11.54</td></tr>
-        <tr><td style="padding: 6px; border: 1px solid #ddd;">3</td><td style="padding: 6px; border: 1px solid #ddd;">Ginger Coffee</td><td style="padding: 6px; border: 1px solid #ddd;">300 g</td><td style="padding: 6px; border: 1px solid #ddd;">1,000.00</td><td style="padding: 6px; border: 1px solid #ddd;">1.54</td></tr>
-        <tr><td style="padding: 6px; border: 1px solid #ddd;">4</td><td style="padding: 6px; border: 1px solid #ddd;">Cinnamon Powder</td><td style="padding: 6px; border: 1px solid #ddd;">100 g</td><td style="padding: 6px; border: 1px solid #ddd;">1,800.00</td><td style="padding: 6px; border: 1px solid #ddd;">2.77</td></tr>
-        <tr><td style="padding: 6px; border: 1px solid #ddd;">5</td><td style="padding: 6px; border: 1px solid #ddd;">Sugar</td><td style="padding: 6px; border: 1px solid #ddd;">200 g</td><td style="padding: 6px; border: 1px solid #ddd;">44.00</td><td style="padding: 6px; border: 1px solid #ddd;">0.07</td></tr>
-        <tr style="font-weight: bold; background-color: #f7f7f7;"><td style="padding: 6px; border: 1px solid #ddd;">A</td><td style="padding: 6px; border: 1px solid #ddd;">Total Raw Material Cost</td><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">18,844.00</td><td style="padding: 6px; border: 1px solid #ddd;">28.99</td></tr>
-        <tr><td style="padding: 6px; border: 1px solid #ddd;">B</td><td style="padding: 6px; border: 1px solid #ddd;">Direct Labor Cost (650 x LKR 9.50)</td><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">6,175.00</td><td style="padding: 6px; border: 1px solid #ddd;">9.50</td></tr>
-        <tr><td style="padding: 6px; border: 1px solid #ddd;">C</td><td style="padding: 6px; border: 1px solid #ddd;">Operational Overhead & Utilities (650 x LKR 3.46)</td><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">2,249.00</td><td style="padding: 6px; border: 1px solid #ddd;">3.46</td></tr>
-        <tr style="font-weight: bold; background-color: #eaf2f8;"><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">Total Manufacturing Cost (650 Tablets)</td><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">LKR 27,268.00</td><td style="padding: 6px; border: 1px solid #ddd;">LKR 41.95</td></tr>
-        <tr><td style="padding: 6px; border: 1px solid #ddd;">D</td><td style="padding: 6px; border: 1px solid #ddd;">Courier, Packaging Box & Wrapping Charges</td><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">2,632.50</td><td style="padding: 6px; border: 1px solid #ddd;">4.05</td></tr>
-        <tr style="font-weight: bold; background-color: #d4efdf;"><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">TOTAL LANDED COST (Manufacturing + Delivery)</td><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">LKR 29,900.00</td><td style="padding: 6px; border: 1px solid #ddd;">LKR 46.00</td></tr>
-    </table>
-    <div style="margin-top: 20px; background-color: #27ae60; color: white; padding: 15px; border-radius: 5px;">
-        <h3 style="margin: 0 0 10px 0;">SWEDEN ORDER FINANCIAL SUMMARY (650 TABLETS)</h3>
-        <p style="margin: 3px 0;">• Total Revenue (650 Tablets @ LKR 50.00/ea): LKR 32,500.00</p>
-        <p style="margin: 3px 0;">• Total Cost (650 Tablets @ LKR 46.00/ea): LKR 29,900.00</p>
-        <h2 style="margin: 10px 0 0 0; text-align: right;">NET PROFIT: LKR 2,600.00</h2>
-        <p style="margin: 2px 0 0 0; font-size: 11px; text-align: right;">(Margin: 8.00% / LKR 4.00 per tablet)</p>
-    </div>
-</body>
-</html>"""
-
-    st.download_button(
-        label="🖨️ Download Sweden Export Order Report (.html for Printing)",
-        data=sweden_html.encode('utf-8'),
-        file_name=f"Sweden_Export_Cost_Report_{datetime.now().strftime('%Y%m%d')}.html",
-        mime="text/html"
-    )
+    st.markdown("---")
+    st.subheader("🇸🇪 Sweden Order Financial Summary")
+    sw1, sw2, sw3 = st.columns(3)
+    sw1.metric("Total Revenue", f"LKR {total_revenue:,.2f}")
+    sw2.metric("Total Landed Cost", f"LKR {total_landed_cost:,.2f}")
+    sw3.metric("Net Profit", f"LKR {net_profit_sweden:,.2f}", f"LKR {profit_per_tablet:.2f} / tablet")
 
 # --- SECTION 3: EXPENSES REPORT ---
 elif menu_selection == "💸 Expenses Report":
@@ -411,7 +396,7 @@ elif menu_selection == "📄 Invoice Generator":
         var = st.selectbox("Variant", list(st.session_state.tablet_stock.keys()))
         qty = st.number_input("Qty", value=10)
         if st.form_submit_button("Add"):
-            st.session_state.invoice_cart.append({"Variant": var, "Qty": qty, "Total": qty * st.session_state.retail_price})
+            st.session_state.invoice_cart.append({"Variant": var, "Qty": qty, "Total": qty * 50.0})
             st.success("Added!")
     if st.session_state.invoice_cart:
         st.table(pd.DataFrame(st.session_state.invoice_cart))
@@ -426,9 +411,9 @@ elif menu_selection == "📋 Directors Dashboard":
     if cat == "Expenses Report" and st.session_state.expenses_logs:
         st.dataframe(pd.DataFrame(st.session_state.expenses_logs))
     elif cat == "Unit Cost Analysis":
-        st.info("Check the 'Unit Cost & Profitability Analysis' tab for complete breakdowns and print view.")
+        st.info("Check the 'Unit Cost & Profitability Analysis' tab for complete breakdowns and live edits.")
     elif cat == "Sweden Export Report":
-        st.info("Check the 'Sweden Export Order Cost Report' tab for the complete case study and print view.")
+        st.info("Check the 'Sweden Export Order Cost Report' tab for live case study edits.")
     elif cat == "Invoices" and st.session_state.orders:
         st.dataframe(pd.DataFrame(st.session_state.orders))
     else:
