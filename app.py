@@ -1,7 +1,6 @@
 import streamlit as st
 from datetime import datetime
 import pandas as pd
-from io import BytesIO
 
 st.set_page_config(page_title="Ceylon Coffee Tablets - Enterprise Portal", layout="wide")
 
@@ -98,6 +97,7 @@ with tabs[1]:
                 "Batch No": batch_no,
                 "Variant": variant,
                 "Date": str(mfg_date),
+                "Coffee Weight (kg)": coffee_wt,
                 "Moisture": f"{moisture}%",
                 "Status": qc_status,
                 "Attached Photo": photo_name
@@ -108,7 +108,7 @@ with tabs[1]:
         st.subheader("Saved R&D Logs")
         rd_df = pd.DataFrame(st.session_state.rd_logs)
         st.table(rd_df)
-        st.download_button("📥 Download R&D Logs Report (CSV)", rd_df.to_csv(index=False).encode('utf-8'), "rd_logs_report.csv", "text/csv")
+        st.download_button("📥 Download R&D Reports (CSV)", rd_df.to_csv(index=False).encode('utf-8'), "rd_logs_report.csv", "text/csv")
 
 # --- TAB 3: RAW MATERIALS (RM-LOG) ---
 with tabs[2]:
@@ -146,7 +146,7 @@ with tabs[2]:
 # --- TAB 4: PROFESSIONAL INVOICE GENERATOR ---
 with tabs[3]:
     st.header("Official Invoice Generator (Tablets Quantity-wise)")
-    st.markdown("ඉන්වොයිස් අංකය **CCT-** යටතේ ඇතුළත් කර, බහු කෝපි වර්ග (Multiple Variants) එකින් එක කාර්ට් එකට එකතු කරගත හැක.")
+    st.markdown("ඉන්වොයිස් අංකය **CCT-** යටතේ ඇතුළත් කර, බහු කෝපි වර්ග එකින් එක කාර්ට් එකට එකතු කරගත හැක.")
 
     col_inf1, col_inf2 = st.columns(2)
     with col_inf1:
@@ -158,7 +158,7 @@ with tabs[3]:
         cust_address = st.text_area("Delivery Address", value="")
 
     st.markdown("---")
-    st.subheader("Add Coffee Variant & Tablet Quantity (Multiple items can be added)")
+    st.subheader("Add Coffee Variant & Tablet Quantity")
     
     with st.form("add_cart_form"):
         c_var = st.selectbox("Select Coffee Variant", [
@@ -178,7 +178,7 @@ with tabs[3]:
                 "Unit Price": unit_price,
                 "Total": c_tablets_qty * unit_price
             })
-            st.success(f"Added {c_tablets_qty} tablets of {c_var} to invoice cart! (තව අවශ්‍ය නම් තවත් වර්ගයක් තෝරා එකතු කරන්න)")
+            st.success(f"Added {c_tablets_qty} tablets of {c_var} to invoice cart!")
 
     if st.session_state.invoice_cart:
         st.subheader("Current Invoice Items List")
@@ -211,8 +211,12 @@ with tabs[3]:
             
             st.success("Invoice generated and saved successfully!")
 
+        if st.session_state.orders:
+            # Get the latest generated invoice for display & html download
+            latest_order = st.session_state.orders[-1]
+            
             cart_rows_html = ""
-            for idx, cart_item in enumerate(st.session_state.invoice_cart, 1):
+            for idx, cart_item in enumerate(latest_order["Cart Details"], 1):
                 cart_rows_html += f"""
                     <tr style="border-bottom: 1px solid #ddd; font-size: 13px;">
                         <td style="padding: 10px; text-align: center;">{idx:02d}</td>
@@ -223,10 +227,14 @@ with tabs[3]:
                     </tr>
                 """
 
-            formatted_address = cust_address.replace(chr(10), '<br>') if cust_address else "No Address Provided"
+            formatted_address = latest_order["Address"].replace(chr(10), '<br>') if latest_order["Address"] else "No Address Provided"
             
             invoice_html = f"""
-            <div style="border: 2px solid #5a3825; padding: 25px; border-radius: 8px; font-family: Arial, sans-serif; background-color: #ffffff; color: #000000; margin-top: 20px;">
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="utf-8"><title>Invoice {latest_order['Invoice No']}</title></head>
+            <body style="font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 20px;">
+            <div style="max-width: 800px; margin: auto; border: 2px solid #5a3825; padding: 25px; border-radius: 8px; background-color: #ffffff; color: #000000;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #5a3825; padding-bottom: 15px;">
                     <div>
                         <h2 style="margin: 0; color: #5a3825; font-size: 22px;">CEYLON COFFEE TABLETS (PVT) LTD</h2>
@@ -234,14 +242,14 @@ with tabs[3]:
                     </div>
                     <div style="text-align: right;">
                         <h1 style="margin: 0; color: #5a3825; font-size: 26px; letter-spacing: 2px;">INVOICE</h1>
-                        <p style="margin: 5px 0; font-size: 13px;"><b>Invoice No:</b> {inv_no}<br><b>Date:</b> {datetime.now().strftime('%d %b, %Y')}</p>
+                        <p style="margin: 5px 0; font-size: 13px;"><b>Invoice No:</b> {latest_order['Invoice No']}<br><b>Date:</b> {latest_order['Date']}</p>
                     </div>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; margin-top: 20px; gap: 20px;">
                     <div style="flex: 1; border: 1px solid #c8b198; padding: 12px; border-radius: 5px; background-color: #fdfbf7;">
                         <p style="margin: 0 0 5px 0; font-size: 11px; color: #8c6239; font-weight: bold;">DELIVER TO</p>
-                        <p style="margin: 0; font-size: 13px; line-height: 1.4;"><b>{cust_name if cust_name else '[Customer Name]'}</b><br>{formatted_address}<br>TP: {cust_phone if cust_phone else '[Phone Number]'}</p>
+                        <p style="margin: 0; font-size: 13px; line-height: 1.4;"><b>{latest_order['Customer']}</b><br>{formatted_address}<br>TP: {latest_order['Phone']}</p>
                     </div>
                     <div style="flex: 1; border: 1px solid #bce8f1; padding: 12px; border-radius: 5px; background-color: #f4f8fb;">
                         <p style="margin: 0 0 5px 0; font-size: 11px; color: #31708f; font-weight: bold;">BANK DETAILS FOR PAYMENT</p>
@@ -266,11 +274,11 @@ with tabs[3]:
                 
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px;">
                     <div style="border: 1px dashed #b5835a; padding: 8px 12px; border-radius: 4px; font-size: 12px; color: #5a3825; background-color: #faf4ed;">
-                        Note: + Delivery Fee | Category: {pricing_type}
+                        Note: + Delivery Fee | Category: {latest_order['Type']}
                     </div>
                     <div style="border: 2px solid #5a3825; padding: 12px 25px; border-radius: 6px; text-align: right; background-color: #fff;">
                         <p style="margin: 0; font-size: 11px; color: #666; font-weight: bold;">TOTAL AMOUNT</p>
-                        <h2 style="margin: 5px 0 0 0; color: #5a3825; font-size: 22px;">{grand_total:,.2f} LKR</h2>
+                        <h2 style="margin: 5px 0 0 0; color: #5a3825; font-size: 22px;">{latest_order['Grand Total (LKR)']:,.2f} LKR</h2>
                     </div>
                 </div>
                 
@@ -279,10 +287,22 @@ with tabs[3]:
                     <p style="margin: 3px 0 0 0; font-size: 11px; color: #666;">Ceylon Coffee Tablets (Pvt) Ltd — Quality Sri Lankan Specialty Coffee Products</p>
                 </div>
             </div>
+            </body>
+            </html>
             """
+            
             st.markdown(invoice_html, unsafe_allow_html=True)
             st.markdown("---")
-            st.info("🖨️ **ඉන්වොයිසිය PDF ලෙස ඩවුන්ලෝඩ් කර ගැනීමට:** ඔබේ කීබෝඩ් එකෙන් **`Ctrl + P`** (Windows) හෝ **`Cmd + P`** (Mac) ඔබා 'Save as PDF' තෝරාගන්න.")
+            
+            # HTML File Download Button
+            st.download_button(
+                label="📥 Download Invoice as HTML File (.html)",
+                data=invoice_html.encode('utf-8'),
+                file_name=f"{latest_order['Invoice No'].replace('/', '_')}.html",
+                mime="text/html"
+            )
+            
+            st.info("💡 **PDF ලෙස ලබා ගැනීමට:** ඉහත දැක්වෙන ඉන්වොයිසිය මත සිට ඔබේ කීබෝඩ් එකෙන් **`Ctrl + P`** (Windows) හෝ **වලින් **`Cmd + P`** (Mac) ඔබා, Destination එක **'Save as PDF'** ලෙස තෝරාගෙන පහසුවෙන් PDF එකක් ලෙස ඩවුන්ලෝඩ් කරගන්න.")
 
 # --- TAB 5: DIRECTORS & ALL RECORDS ---
 with tabs[4]:
@@ -315,10 +335,10 @@ with tabs[4]:
         orders_df = pd.DataFrame(display_orders)
         st.table(orders_df)
         
-        st.download_button("📥 Download All Orders Report (CSV)", orders_df.to_csv(index=False).encode('utf-8'), "all_orders_report.csv", "text/csv")
+        st.download_button("📥 Download All Orders History Report (CSV)", orders_df.to_csv(index=False).encode('utf-8'), "all_orders_report.csv", "text/csv")
 
         if st.button("Clear All Orders History"):
             st.session_state.orders = []
             st.rerun()
     else:
-        st.info("No orders recorded yet.")
+        st.info("No orders recorded yet. දත්ත ඇතුළත් කළ පසු මෙහි වාර්තා දිස්වේ.")
