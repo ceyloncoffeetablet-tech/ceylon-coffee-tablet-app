@@ -20,7 +20,7 @@ if 'current_user' not in st.session_state:
 if 'user_role' not in st.session_state:
     st.session_state.user_role = ""
 
-# Session State Initialization for Business Data & Inventory Stock
+# Session State Initialization for Business Data & Empty Stock
 if 'retail_price' not in st.session_state:
     st.session_state.retail_price = 50.00
 if 'trade_price' not in st.session_state:
@@ -47,22 +47,22 @@ if 'letters_logs' not in st.session_state:
 if 'invoice_cart' not in st.session_state:
     st.session_state.invoice_cart = []
 
-# Stock Ledger Initialization
+# Empty Stock Ledger Initialization (Starts at 0)
 if 'tablet_stock' not in st.session_state:
     st.session_state.tablet_stock = {
-        "Black Coffee (Light Roast)": 1000,
-        "Black Coffee (Dark Roast)": 1000,
-        "Cinnamon Coffee": 1000,
-        "Ginger Coffee": 1000
+        "Black Coffee (Light Roast)": 0,
+        "Black Coffee (Dark Roast)": 0,
+        "Cinnamon Coffee": 0,
+        "Ginger Coffee": 0
     }
 
 if 'raw_stock' not in st.session_state:
     st.session_state.raw_stock = {
-        "Green Coffee Beans (Arabica)": 50.0,
-        "Ginger Extract Powder": 15.0,
-        "Cinnamon Extract Powder": 15.0,
-        "Tableting Excipients / Binders": 20.0,
-        "Packaging Foils": 500.0
+        "Green Coffee Beans (Arabica)": 0.0,
+        "Ginger Extract Powder": 0.0,
+        "Cinnamon Extract Powder": 0.0,
+        "Tableting Excipients / Binders": 0.0,
+        "Packaging Foils": 0.0
     }
 
 # --- LOGIN SCREEN ---
@@ -107,7 +107,7 @@ if st.sidebar.button("Logout"):
 st.title("Ceylon Coffee Tablets (Pvt) Ltd - Enterprise System")
 st.markdown("*Drop it. Dissolve it. Done. | Corporate Management Portal*")
 
-# Navigation Tabs (Including Stores & Stock)
+# Navigation Tabs
 tabs = st.tabs([
     "📊 Cost & Pricing", 
     "🏭 Batch Production (BPR)", 
@@ -193,7 +193,7 @@ with tabs[0]:
     else:
         st.info("🔒 ඩවුන්ලෝඩ් කරගැනීමේ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
-# --- TAB 2: BATCH PRODUCTION RECORD (BPR MASTER WITH AUTO BATCH & EXPIRY) ---
+# --- TAB 2: BATCH PRODUCTION RECORD (BPR MASTER) ---
 with tabs[1]:
     st.header("Batch Production Record (BPR) Master System")
     st.markdown("නිෂ්පාදන දිනය (Mfg Date) ඇතුළත් කළ විට බැච් අංකය (`CCTYYMMDD`) සහ කල් ඉකුත්වීමේ දිනය (මාස 8කින්) ස්වයංක්‍රීයව ජනනය වේ.")
@@ -203,11 +203,9 @@ with tabs[1]:
         b1, b2, b3 = st.columns(3)
         with b1:
             bpr_mfg = st.date_input("Manufacture Date", value=datetime.now().date())
-            # Auto generate batch number: CCT + YYMMDD
             auto_batch_no = f"CCT{bpr_mfg.strftime('%y%m%d')}"
             st.text_input("Auto Batch Number", value=auto_batch_no, disabled=True)
         with b2:
-            # Auto generate expiry date: + 8 months (approx 240 days)
             auto_exp = bpr_mfg + timedelta(days=240)
             st.text_input("Auto Expiry Date (+8 Months)", value=str(auto_exp), disabled=True)
             bpr_variant = st.selectbox("Product Variant", ["Black Coffee (Light Roast)", "Black Coffee (Dark Roast)", "Cinnamon Coffee", "Ginger Coffee"])
@@ -239,7 +237,6 @@ with tabs[1]:
 
         bpr_submit = st.form_submit_button("Save Batch & Update Stock")
         if bpr_submit:
-            # Save BPR log
             st.session_state.bpr_logs.append({
                 "Batch No": auto_batch_no,
                 "Variant": bpr_variant,
@@ -253,11 +250,9 @@ with tabs[1]:
                 "Recorded By": st.session_state.current_user
             })
             
-            # Update Tablet Stock
             if bpr_variant in st.session_state.tablet_stock:
                 st.session_state.tablet_stock[bpr_variant] += good_tablets
             
-            # Deduct estimated raw material (e.g. 2g per tablet)
             raw_used_kg = (bpr_target_qty * 2.0) / 1000.0
             if "Green Coffee Beans (Arabica)" in st.session_state.raw_stock:
                 st.session_state.raw_stock["Green Coffee Beans (Arabica)"] = max(0.0, st.session_state.raw_stock["Green Coffee Beans (Arabica)"] - raw_used_kg)
@@ -271,10 +266,10 @@ with tabs[1]:
         if st.session_state.user_role == "Admin":
             st.download_button("📥 Download BPR Logs (CSV)", bpr_df.to_csv(index=False).encode('utf-8'), "bpr_master_logs.csv", "text/csv")
 
-# --- TAB 3: STORES & STOCK (LINKED INVENTORY) ---
+# --- TAB 3: STORES & STOCK (LINKED INVENTORY - EMPTY START) ---
 with tabs[2]:
     st.header("Stores & Stock Management (Raw Materials & Tablets)")
-    st.markdown("අමුද්‍රව්‍ය ස්ටොක් (Raw Materials Stock) සහ නිම කළ ටැබ්ලට් ස්ටොක් (Finished Tablets Stock) ශේෂයන් මෙහි දැක්වේ.")
+    st.markdown("අමුද්‍රව්‍ය ස්ටොක් සහ නිම කළ ටැබ්ලට් ස්ටොක් ශේෂයන් මෙහි දැක්වේ.")
 
     col_st1, col_st2 = st.columns(2)
     with col_st1:
@@ -353,12 +348,12 @@ with tabs[3]:
         if st.session_state.user_role == "Admin":
             st.download_button("📥 Download R&D Reports (CSV)", rd_df.to_csv(index=False).encode('utf-8'), "rd_logs_report.csv", "text/csv")
 
-# --- TAB 5: DEALERS DIRECTORY (LOCAL & FOREIGN - ADMIN ONLY) ---
+# --- TAB 5: DEALERS DIRECTORY (ADMIN ONLY) ---
 with tabs[4]:
     st.header("Local & Foreign Dealers Directory (Secure Confidential)")
     
     if st.session_state.user_role == "Admin":
-        st.markdown("දේශීය සහ විදේශීය ඩීලර්වරුන්ගේ (ಉదా: Sweden ඩීලර්) විස්තර ආරක්ෂිතව ඇතුළත් කර සුරකින්න.")
+        st.markdown("දේශීය සහ විදේශීය ඩීලර්වරුන්ගේ (උදා: Sweden ඩීලර්) විස්තර ආරක්ෂිතව ඇතුළත් කර සුරකින්න.")
         
         with st.form("dealer_form"):
             d_col1, d_col2 = st.columns(2)
@@ -396,7 +391,7 @@ with tabs[4]:
         else:
             st.info("No dealers registered yet.")
     else:
-        st.error("🔒 රහස්‍යභාවය සුරක්ෂිත කිරීම සඳහා ඩීලර්ස් නාමාවලිය බැලීමේ සහ ඇතුළත් කිරීමේ පූර්ණ අවසරය ඇත්තේ ඇඩ්මින් (ක්‍රිශන් දමිත්) වෙත පමණි.")
+        st.error("🔒 රහස්‍යභාවය සුරක්ෂිත කිරීම සඳහා ඩීලර්ස් නාමාවලිය බැලීමේ සහ ඇතුළත් කිරීමේ පූර්ණ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
 # --- TAB 6: OFFICIAL LETTERS & MEMOS ---
 with tabs[5]:
@@ -404,7 +399,7 @@ with tabs[5]:
     with st.form("letter_form"):
         col_l1, col_l2 = st.columns(2)
         with col_l1:
-            doc_type = st.selectbox("Document Type", ["Inbound Letter (ලැබුණු ලිපිය)", "Outbound Memo (යැවූ ලිපිය/මීමොව)", "Corporate Notice"])
+            doc_type = st.selectbox("Document Type", ["Inbound Letter (לැබුණු ලිපිය)", "Outbound Memo (යැවූ ලිපිය/මීමොව)", "Corporate Notice"])
             subject_title = st.text_input("Subject / Title (විෂය)")
             sender_receiver = st.text_input("Sender / Recipient Name (අදාළ පාර්ශ්වය)")
         with col_l2:
@@ -434,7 +429,7 @@ with tabs[5]:
         if st.session_state.user_role == "Admin":
             st.download_button("📥 Download Letters Report (CSV)", letters_df.to_csv(index=False).encode('utf-8'), "letters_memos_report.csv", "text/csv")
 
-# --- TAB 7: PROFESSIONAL INVOICE GENERATOR (DEDUCTS TABLET STOCK) ---
+# --- TAB 7: PROFESSIONAL INVOICE GENERATOR ---
 with tabs[6]:
     st.header("Official Invoice Generator (Tablets Quantity-wise)")
     col_inf1, col_inf2 = st.columns(2)
@@ -486,7 +481,6 @@ with tabs[6]:
             grand_total = sum([item["Total"] for item in st.session_state.invoice_cart])
             total_tablets_count = sum([item["Qty"] for item in st.session_state.invoice_cart])
             
-            # Deduct from finished tablet stock
             for cart_item in st.session_state.invoice_cart:
                 v_name = cart_item["Variant"]
                 v_qty = cart_item["Qty"]
@@ -599,7 +593,7 @@ with tabs[6]:
 # --- TAB 8: DIRECTORS & FILTERABLE RECORDS DASHBOARD ---
 with tabs[7]:
     st.header("Directors' Filterable Records & Management Dashboard")
-    st.markdown("අධ්‍යක්ෂකවරුන්ට අවශ්‍ය වාර්තා වර්ගය තෝරා (Filter කර) නැරඹිය හැක. (ඩවුන්ලෝඩ් බලය ඇඩ්මින් සතුය)")
+    st.markdown("අධ්‍යක්ෂකවරුන්ට අවශ්‍ය වාර්තා වර්ගය තෝරා (Filter කර) නැරඹිය හැක.")
 
     report_category = st.selectbox("Select Report Category to View", [
         "Batch Production Records (BPR)",
