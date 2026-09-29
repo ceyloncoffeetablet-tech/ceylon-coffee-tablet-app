@@ -38,6 +38,10 @@ if 'rd_logs' not in st.session_state:
     st.session_state.rd_logs = []
 if 'rm_logs' not in st.session_state:
     st.session_state.rm_logs = []
+if 'bpr_logs' not in st.session_state:
+    st.session_state.bpr_logs = []
+if 'dealers_logs' not in st.session_state:
+    st.session_state.dealers_logs = []
 if 'letters_logs' not in st.session_state:
     st.session_state.letters_logs = []
 if 'invoice_cart' not in st.session_state:
@@ -85,14 +89,16 @@ if st.sidebar.button("Logout"):
 st.title("Ceylon Coffee Tablets (Pvt) Ltd - Enterprise System")
 st.markdown("*Drop it. Dissolve it. Done. | Corporate Management Portal*")
 
-# Navigation Tabs
+# Navigation Tabs (Including BPR Master and Dealers Directory)
 tabs = st.tabs([
-    "📊 Cost & Pricing (Secure)", 
-    "🧪 Lab & R&D Reports", 
-    "📦 Raw Materials (RM-LOG)", 
+    "📊 Cost & Pricing", 
+    "🏭 Batch Production (BPR)", 
+    "🧪 Lab & R&D", 
+    "📦 Raw Materials", 
+    "🤝 Dealers Directory", 
     "✉️ Letters & Memos", 
-    "📄 Professional Invoice Generator", 
-    "📋 Directors & Records Dashboard"
+    "📄 Invoice Generator", 
+    "📋 Directors Dashboard"
 ])
 
 # --- TAB 1: COST & PROFIT ANALYSIS & LOCK CONTROL ---
@@ -164,14 +170,79 @@ with tabs[0]:
         "Status": "LOCKED" if st.session_state.prices_locked else "UNLOCKED"
     }])
     
-    # DOWNLOAD RESTRICTED TO ADMIN ONLY
     if st.session_state.user_role == "Admin":
         st.download_button("📥 Download Cost Analysis Report (CSV)", cost_data.to_csv(index=False).encode('utf-8'), "cost_analysis.csv", "text/csv")
     else:
-        st.info("🔒 ඩවුන්ලෝඩ් කරගැනීමේ අවසරය ඇත්තේ ඇඩ්මින් (ක්‍රිශන් දමිත්) වෙත පමණි.")
+        st.info("🔒 ඩවුන්ලෝඩ් කරගැනීමේ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
-# --- TAB 2: LAB / R&D REPORTS ---
+# --- TAB 2: BATCH PRODUCTION RECORD (BPR MASTER) ---
 with tabs[1]:
+    st.header("Batch Production Record (BPR) Master System")
+    st.markdown("දිනපතා නිෂ්පාදන, බැච් අංකය (Batch No), ටැබ්ලට් ප්‍රමාණය, QC Testing, Dissolve Time සහ Drying විස්තර ඇතුළත් කරන්න.")
+
+    with st.form("bpr_form"):
+        st.subheader("1. Batch Identification & Metadata")
+        b1, b2, b3 = st.columns(3)
+        with b1:
+            bpr_batch_no = st.text_input("Batch Number (e.g., CCT-2026-0929-B1)")
+            bpr_variant = st.selectbox("Product Variant", ["Black Coffee (Light Roast)", "Black Coffee (Dark Roast)", "Cinnamon Coffee", "Ginger Coffee"])
+        with b2:
+            bpr_mfg = st.date_input("Manufacture Date")
+            bpr_exp = st.date_input("Expiry Date")
+        with b3:
+            bpr_target_qty = st.number_input("Target Batch Size (Tablets Qty)", value=150)
+            bpr_operator = st.text_input("Operator / Production Technician Name")
+
+        st.subheader("2. In-Process Quality Checks (Tabulating Stage)")
+        st.markdown("Sample testing (Dissolve time target: 20-30s @ 100°C)")
+        
+        c_test1, c_test2, c_test3, c_test4 = st.columns(4)
+        with c_test1:
+            test_sample = st.selectbox("Sample No", ["S-01", "S-02", "S-03", "S-04", "S-05"])
+        with c_test2:
+            dissolve_sec = st.number_input("Dissolve Time (seconds)", value=25)
+        with c_test3:
+            visual_check = st.selectbox("Visual Check Status", ["OK (Pass)", "Defect / Discolour / Delay"])
+        with c_test4:
+            tested_qty = st.number_input("Tablets Tested Qty", value=5)
+
+        st.subheader("3. Drying, Packaging & Yield Summary")
+        d1, d2 = st.columns(2)
+        with d1:
+            drying_method = st.selectbox("Drying Method", ["Cabinet (20-30m)", "Air Dry"])
+            moisture_content = st.number_input("Moisture Content (%) [Target < 3%]", value=2.5, step=0.1)
+            good_tablets = st.number_input("Good Tablets Count", value=145)
+        with d2:
+            rejected_tablets = st.number_input("Rejected / Crumbled Tablets", value=5)
+            packaging_type = st.selectbox("Packaging Type", ["30 Tab Bottle", "100 Tab Bottle", "Bulk Pack"])
+            final_packages = st.number_input("Final Packaged Units", value=5)
+
+        bpr_submit = st.form_submit_button("Save Batch Production Record (BPR)")
+        if bpr_submit and bpr_batch_no:
+            st.session_state.bpr_logs.append({
+                "Batch No": bpr_batch_no,
+                "Variant": bpr_variant,
+                "Mfg Date": str(bpr_mfg),
+                "Target Qty": bpr_target_qty,
+                "Dissolve Time (s)": dissolve_sec,
+                "Visual Status": visual_check,
+                "Moisture (%)": f"{moisture_content}%",
+                "Good Qty": good_tablets,
+                "Rejected Qty": rejected_tablets,
+                "Operator": bpr_operator,
+                "Recorded By": st.session_state.current_user
+            })
+            st.success("Batch Production Record Saved Successfully!")
+
+    if st.session_state.bpr_logs:
+        st.subheader("Saved Batch Production Records (BPR Master)")
+        bpr_df = pd.DataFrame(st.session_state.bpr_logs)
+        st.table(bpr_df)
+        if st.session_state.user_role == "Admin":
+            st.download_button("📥 Download BPR Logs (CSV)", bpr_df.to_csv(index=False).encode('utf-8'), "bpr_master_logs.csv", "text/csv")
+
+# --- TAB 3: LAB & R&D REPORTS ---
+with tabs[2]:
     st.header("Lab & R&D Quality Control Reports (BPR-QC Master)")
     with st.form("rd_form"):
         col1, col2, col3 = st.columns(3)
@@ -209,8 +280,8 @@ with tabs[1]:
         if st.session_state.user_role == "Admin":
             st.download_button("📥 Download R&D Reports (CSV)", rd_df.to_csv(index=False).encode('utf-8'), "rd_logs_report.csv", "text/csv")
 
-# --- TAB 3: RAW MATERIALS (RM-LOG) ---
-with tabs[2]:
+# --- TAB 4: RAW MATERIALS (RM-LOG) ---
+with tabs[3]:
     st.header("Raw Materials Inventory & Sourcing Management (RM-LOG)")
     with st.form("rm_form"):
         c1, c2, c3 = st.columns(3)
@@ -244,8 +315,54 @@ with tabs[2]:
         if st.session_state.user_role == "Admin":
             st.download_button("📥 Download Raw Materials Report (CSV)", rm_df.to_csv(index=False).encode('utf-8'), "raw_materials_report.csv", "text/csv")
 
-# --- TAB 4: OFFICIAL LETTERS & MEMOS ---
-with tabs[3]:
+# --- TAB 5: DEALERS DIRECTORY (LOCAL & FOREIGN - ADMIN ONLY ACCESS) ---
+with tabs[4]:
+    st.header("Local & Foreign Dealers Directory (Secure Confidential)")
+    
+    # STRICT SECURITY: ONLY ADMIN CAN VIEW AND ADD DEALERS
+    if st.session_state.user_role == "Admin":
+        st.markdown("දේශීය සහ විදේශීය ඩීලර්වරුන්ගේ (ಉదా: Sweden ඩීලර්) විස්තර ආරක්ෂිතව ඇතුළත් කර සුරකින්න.")
+        
+        with st.form("dealer_form"):
+            d_col1, d_col2 = st.columns(2)
+            with d_col1:
+                dealer_name = st.text_input("Dealer / Business Name")
+                dealer_type = st.selectbox("Dealer Category", ["Local Dealer (දේශීය)", "Foreign Dealer (විදේශීය - උදා: Sweden)"])
+                country = st.text_input("Country & City (e.g., Sweden, Kalmar)")
+            with d_col2:
+                contact_person = st.text_input("Contact Person Name")
+                dealer_phone = st.text_input("Phone Number / WhatsApp")
+                dealer_email = st.text_input("Email Address")
+                
+            dealer_address = st.text_area("Full Business Address")
+            dealer_notes = st.text_area("Agreement / Special Notes")
+            
+            save_dealer = st.form_submit_button("Save Dealer Record")
+            if save_dealer and dealer_name:
+                st.session_state.dealers_logs.append({
+                    "Dealer Name": dealer_name,
+                    "Category": dealer_type,
+                    "Country": country,
+                    "Contact Person": contact_person,
+                    "Phone": dealer_phone,
+                    "Email": dealer_email,
+                    "Address": dealer_address,
+                    "Notes": dealer_notes
+                })
+                st.success("Dealer record saved securely!")
+
+        if st.session_state.dealers_logs:
+            st.subheader("Saved Dealers Directory")
+            dealers_df = pd.DataFrame(st.session_state.dealers_logs)
+            st.table(dealers_df)
+            st.download_button("📥 Download Dealers Directory (CSV)", dealers_df.to_csv(index=False).encode('utf-8'), "dealers_directory.csv", "text/csv")
+        else:
+            st.info("No dealers registered yet.")
+    else:
+        st.error("🔒 රහස්‍යභාවය සුරක්ෂිත කිරීම සඳහා ඩීලර්ස් නාමාවලිය (Dealers Directory) බැලීමේ සහ ඇතුළත් කිරීමේ පූර්ණ අවසරය ඇත්තේ ඇඩ්මින් (ක්‍රිශන් දමිත්) වෙත පමණි.")
+
+# --- TAB 6: OFFICIAL LETTERS & MEMOS ---
+with tabs[5]:
     st.header("Official Letters, Inbound/Outbound Memos & Documents")
     with st.form("letter_form"):
         col_l1, col_l2 = st.columns(2)
@@ -278,10 +395,10 @@ with tabs[3]:
         letters_df = pd.DataFrame(st.session_state.letters_logs)
         st.table(letters_df)
         if st.session_state.user_role == "Admin":
-            st.download_button("📥 Download Letters & Memos Report (CSV)", letters_df.to_csv(index=False).encode('utf-8'), "letters_memos_report.csv", "text/csv")
+            st.download_button("📥 Download Letters Report (CSV)", letters_df.to_csv(index=False).encode('utf-8'), "letters_memos_report.csv", "text/csv")
 
-# --- TAB 5: PROFESSIONAL INVOICE GENERATOR ---
-with tabs[4]:
+# --- TAB 7: PROFESSIONAL INVOICE GENERATOR ---
+with tabs[6]:
     st.header("Official Invoice Generator (Tablets Quantity-wise)")
     col_inf1, col_inf2 = st.columns(2)
     with col_inf1:
@@ -433,14 +550,15 @@ with tabs[4]:
                     mime="text/html"
                 )
             else:
-                st.info("🔒 ඩවුන්ලෝඩ් කරගැනීමේ අවසරය ඇත්තේ ඇඩ්මින් (ක්‍රිශන් දමිත්) වෙත පමණි.")
+                st.info("🔒 ඩවුන්ලෝඩ් කරගැනීමේ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
-# --- TAB 6: DIRECTORS & FILTERABLE RECORDS DASHBOARD ---
-with tabs[5]:
+# --- TAB 8: DIRECTORS & FILTERABLE RECORDS DASHBOARD ---
+with tabs[7]:
     st.header("Directors' Filterable Records & Management Dashboard")
-    st.markdown("අධ්‍යක්ෂකවරුන්ට අවශ්‍ය වාර්තා වර්ගය තෝරා (Filter කර) නැරඹිය හැක. (ඩවුන්ලෝඩ් බලය ඇඩ්මින් සතුය)")
+    st.markdown("අධ්‍‍යක්ෂකවරුන්ට අවශ්‍ය වාර්තා වර්ගය තෝරා (Filter කර) නැරඹිය හැක. (ඩවුන්ලෝඩ් බලය ඇඩ්මින් සතුය)")
 
     report_category = st.selectbox("Select Report Category to View", [
+        "Batch Production Records (BPR)",
         "Lab & R&D Reports", 
         "Raw Materials (RM-LOG)", 
         "Official Letters & Memos", 
@@ -449,7 +567,17 @@ with tabs[5]:
 
     st.markdown("---")
 
-    if report_category == "Lab & R&D Reports":
+    if report_category == "Batch Production Records (BPR)":
+        st.subheader("🏭 Batch Production Records (BPR)")
+        if st.session_state.bpr_logs:
+            bpr_df = pd.DataFrame(st.session_state.bpr_logs)
+            st.table(bpr_df)
+            if st.session_state.user_role == "Admin":
+                st.download_button("📥 Download BPR Logs (CSV)", bpr_df.to_csv(index=False).encode('utf-8'), "bpr_logs.csv", "text/csv")
+        else:
+            st.info("No Batch Production records found.")
+
+    elif report_category == "Lab & R&D Reports":
         st.subheader("🧪 Lab & R&D Quality Control Records")
         if st.session_state.rd_logs:
             rd_df = pd.DataFrame(st.session_state.rd_logs)
