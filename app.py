@@ -1,5 +1,5 @@
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 
 st.set_page_config(page_title="Ceylon Coffee Tablets - Enterprise Portal", layout="wide")
@@ -20,7 +20,7 @@ if 'current_user' not in st.session_state:
 if 'user_role' not in st.session_state:
     st.session_state.user_role = ""
 
-# Session State Initialization for Business Data
+# Session State Initialization for Business Data & Inventory Stock
 if 'retail_price' not in st.session_state:
     st.session_state.retail_price = 50.00
 if 'trade_price' not in st.session_state:
@@ -46,6 +46,24 @@ if 'letters_logs' not in st.session_state:
     st.session_state.letters_logs = []
 if 'invoice_cart' not in st.session_state:
     st.session_state.invoice_cart = []
+
+# Stock Ledger Initialization
+if 'tablet_stock' not in st.session_state:
+    st.session_state.tablet_stock = {
+        "Black Coffee (Light Roast)": 1000,
+        "Black Coffee (Dark Roast)": 1000,
+        "Cinnamon Coffee": 1000,
+        "Ginger Coffee": 1000
+    }
+
+if 'raw_stock' not in st.session_state:
+    st.session_state.raw_stock = {
+        "Green Coffee Beans (Arabica)": 50.0,
+        "Ginger Extract Powder": 15.0,
+        "Cinnamon Extract Powder": 15.0,
+        "Tableting Excipients / Binders": 20.0,
+        "Packaging Foils": 500.0
+    }
 
 # --- LOGIN SCREEN ---
 if not st.session_state.logged_in:
@@ -89,12 +107,12 @@ if st.sidebar.button("Logout"):
 st.title("Ceylon Coffee Tablets (Pvt) Ltd - Enterprise System")
 st.markdown("*Drop it. Dissolve it. Done. | Corporate Management Portal*")
 
-# Navigation Tabs (Including BPR Master and Dealers Directory)
+# Navigation Tabs (Including Stores & Stock)
 tabs = st.tabs([
     "📊 Cost & Pricing", 
     "🏭 Batch Production (BPR)", 
+    "📦 Stores & Stock", 
     "🧪 Lab & R&D", 
-    "📦 Raw Materials", 
     "🤝 Dealers Directory", 
     "✉️ Letters & Memos", 
     "📄 Invoice Generator", 
@@ -175,32 +193,34 @@ with tabs[0]:
     else:
         st.info("🔒 ඩවුන්ලෝඩ් කරගැනීමේ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
-# --- TAB 2: BATCH PRODUCTION RECORD (BPR MASTER) ---
+# --- TAB 2: BATCH PRODUCTION RECORD (BPR MASTER WITH AUTO BATCH & EXPIRY) ---
 with tabs[1]:
     st.header("Batch Production Record (BPR) Master System")
-    st.markdown("දිනපතා නිෂ්පාදන, බැච් අංකය (Batch No), ටැබ්ලට් ප්‍රමාණය, QC Testing, Dissolve Time සහ Drying විස්තර ඇතුළත් කරන්න.")
+    st.markdown("නිෂ්පාදන දිනය (Mfg Date) ඇතුළත් කළ විට බැච් අංකය (`CCTYYMMDD`) සහ කල් ඉකුත්වීමේ දිනය (මාස 8කින්) ස්වයංක්‍රීයව ජනනය වේ.")
 
     with st.form("bpr_form"):
-        st.subheader("1. Batch Identification & Metadata")
+        st.subheader("1. Batch Identification & Metadata (Auto Generated)")
         b1, b2, b3 = st.columns(3)
         with b1:
-            bpr_batch_no = st.text_input("Batch Number (e.g., CCT-2026-0929-B1)")
-            bpr_variant = st.selectbox("Product Variant", ["Black Coffee (Light Roast)", "Black Coffee (Dark Roast)", "Cinnamon Coffee", "Ginger Coffee"])
+            bpr_mfg = st.date_input("Manufacture Date", value=datetime.now().date())
+            # Auto generate batch number: CCT + YYMMDD
+            auto_batch_no = f"CCT{bpr_mfg.strftime('%y%m%d')}"
+            st.text_input("Auto Batch Number", value=auto_batch_no, disabled=True)
         with b2:
-            bpr_mfg = st.date_input("Manufacture Date")
-            bpr_exp = st.date_input("Expiry Date")
+            # Auto generate expiry date: + 8 months (approx 240 days)
+            auto_exp = bpr_mfg + timedelta(days=240)
+            st.text_input("Auto Expiry Date (+8 Months)", value=str(auto_exp), disabled=True)
+            bpr_variant = st.selectbox("Product Variant", ["Black Coffee (Light Roast)", "Black Coffee (Dark Roast)", "Cinnamon Coffee", "Ginger Coffee"])
         with b3:
-            bpr_target_qty = st.number_input("Target Batch Size (Tablets Qty)", value=150)
-            bpr_operator = st.text_input("Operator / Production Technician Name")
+            bpr_target_qty = st.number_input("Target Tablets Quantity Produced", value=150)
+            bpr_operator = st.text_input("Operator / Technician Name")
 
         st.subheader("2. In-Process Quality Checks (Tabulating Stage)")
-        st.markdown("Sample testing (Dissolve time target: 20-30s @ 100°C)")
-        
         c_test1, c_test2, c_test3, c_test4 = st.columns(4)
         with c_test1:
             test_sample = st.selectbox("Sample No", ["S-01", "S-02", "S-03", "S-04", "S-05"])
         with c_test2:
-            dissolve_sec = st.number_input("Dissolve Time (seconds)", value=25)
+            dissolve_sec = st.number_input("Dissolve Time (seconds) [Target: 20-30s]", value=25)
         with c_test3:
             visual_check = st.selectbox("Visual Check Status", ["OK (Pass)", "Defect / Discolour / Delay"])
         with c_test4:
@@ -217,22 +237,32 @@ with tabs[1]:
             packaging_type = st.selectbox("Packaging Type", ["30 Tab Bottle", "100 Tab Bottle", "Bulk Pack"])
             final_packages = st.number_input("Final Packaged Units", value=5)
 
-        bpr_submit = st.form_submit_button("Save Batch Production Record (BPR)")
-        if bpr_submit and bpr_batch_no:
+        bpr_submit = st.form_submit_button("Save Batch & Update Stock")
+        if bpr_submit:
+            # Save BPR log
             st.session_state.bpr_logs.append({
-                "Batch No": bpr_batch_no,
+                "Batch No": auto_batch_no,
                 "Variant": bpr_variant,
                 "Mfg Date": str(bpr_mfg),
-                "Target Qty": bpr_target_qty,
+                "Expiry Date": str(auto_exp),
+                "Tablets Produced": good_tablets,
                 "Dissolve Time (s)": dissolve_sec,
                 "Visual Status": visual_check,
                 "Moisture (%)": f"{moisture_content}%",
-                "Good Qty": good_tablets,
-                "Rejected Qty": rejected_tablets,
                 "Operator": bpr_operator,
                 "Recorded By": st.session_state.current_user
             })
-            st.success("Batch Production Record Saved Successfully!")
+            
+            # Update Tablet Stock
+            if bpr_variant in st.session_state.tablet_stock:
+                st.session_state.tablet_stock[bpr_variant] += good_tablets
+            
+            # Deduct estimated raw material (e.g. 2g per tablet)
+            raw_used_kg = (bpr_target_qty * 2.0) / 1000.0
+            if "Green Coffee Beans (Arabica)" in st.session_state.raw_stock:
+                st.session_state.raw_stock["Green Coffee Beans (Arabica)"] = max(0.0, st.session_state.raw_stock["Green Coffee Beans (Arabica)"] - raw_used_kg)
+
+            st.success(f"Batch {auto_batch_no} saved successfully! Tablet stock updated and raw materials deducted.")
 
     if st.session_state.bpr_logs:
         st.subheader("Saved Batch Production Records (BPR Master)")
@@ -241,13 +271,56 @@ with tabs[1]:
         if st.session_state.user_role == "Admin":
             st.download_button("📥 Download BPR Logs (CSV)", bpr_df.to_csv(index=False).encode('utf-8'), "bpr_master_logs.csv", "text/csv")
 
-# --- TAB 3: LAB & R&D REPORTS ---
+# --- TAB 3: STORES & STOCK (LINKED INVENTORY) ---
 with tabs[2]:
-    st.header("Lab & R&D Quality Control Reports (BPR-QC Master)")
+    st.header("Stores & Stock Management (Raw Materials & Tablets)")
+    st.markdown("අමුද්‍රව්‍ය ස්ටොක් (Raw Materials Stock) සහ නිම කළ ටැබ්ලට් ස්ටොක් (Finished Tablets Stock) ශේෂයන් මෙහි දැක්වේ.")
+
+    col_st1, col_st2 = st.columns(2)
+    with col_st1:
+        st.subheader("📦 Raw Materials Stock Balance")
+        rm_stock_df = pd.DataFrame(list(st.session_state.raw_stock.items()), columns=["Raw Material Item", "Available Quantity (kg / units)"])
+        st.table(rm_stock_df)
+
+    with col_st2:
+        st.subheader("💊 Finished Tablets Stock Balance")
+        tab_stock_df = pd.DataFrame(list(st.session_state.tablet_stock.items()), columns=["Tablet Variant", "Available Quantity (Units)"])
+        st.table(tab_stock_df)
+
+    st.markdown("---")
+    st.subheader("Add Raw Material Purchase to Stores")
+    with st.form("rm_store_form"):
+        rc1, rc2, rc3 = st.columns(3)
+        with rc1:
+            r_item = st.selectbox("Select Raw Material", list(st.session_state.raw_stock.keys()))
+            r_supplier = st.text_input("Supplier / Source Name")
+        with rc2:
+            r_date = st.date_input("Purchase Date")
+            r_exp = st.date_input("Expiry Date")
+        with rc3:
+            r_qty = st.number_input("Quantity Purchased (kg / units)", value=25.0)
+            r_cost = st.number_input("Total Cost (LKR)", value=45000.0)
+
+        r_submit = st.form_submit_button("Add to Stores")
+        if r_submit and r_supplier:
+            st.session_state.raw_stock[r_item] += r_qty
+            st.session_state.rm_logs.append({
+                "Date": str(r_date),
+                "Item": r_item,
+                "Supplier": r_supplier,
+                "Quantity": r_qty,
+                "Total Cost (LKR)": r_cost,
+                "Expiry Date": str(r_exp)
+            })
+            st.success(f"Added {r_qty} of {r_item} to stores successfully!")
+
+# --- TAB 4: LAB & R&D REPORTS ---
+with tabs[3]:
+    st.header("Lab & R&D Quality Control Reports")
     with st.form("rd_form"):
         col1, col2, col3 = st.columns(3)
         with col1:
-            batch_no = st.text_input("Batch Number (e.g., CCT-2026-001)")
+            batch_no = st.text_input("Batch Number (e.g., CCT260929)")
             variant = st.selectbox("Product Variant", ["Black Coffee (Light Roast)", "Black Coffee (Dark Roast)", "Cinnamon Coffee", "Ginger Coffee"])
         with col2:
             mfg_date = st.date_input("Manufacture Date")
@@ -280,46 +353,10 @@ with tabs[2]:
         if st.session_state.user_role == "Admin":
             st.download_button("📥 Download R&D Reports (CSV)", rd_df.to_csv(index=False).encode('utf-8'), "rd_logs_report.csv", "text/csv")
 
-# --- TAB 4: RAW MATERIALS (RM-LOG) ---
-with tabs[3]:
-    st.header("Raw Materials Inventory & Sourcing Management (RM-LOG)")
-    with st.form("rm_form"):
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            rm_name = st.selectbox("Raw Material Item", ["Green Coffee Beans (Arabica)", "Ginger Extract Powder", "Cinnamon Extract Powder", "Tableting Excipients / Binders", "Packaging Foils"])
-            supplier = st.text_input("Supplier / Source Name (e.g., Kandy Agro Exports)")
-        with c2:
-            purch_date = st.date_input("Purchase Date")
-            expiry_date = st.date_input("Expiry Date")
-        with c3:
-            rm_qty = st.number_input("Quantity Purchased (kg / units)", value=25.0)
-            total_cost_rm = st.number_input("Total Cost (LKR)", value=45000.0)
-
-        submitted_rm = st.form_submit_button("Add Raw Material Record")
-        if submitted_rm and supplier:
-            st.session_state.rm_logs.append({
-                "Date": str(purch_date),
-                "Item": rm_name,
-                "Supplier / Source": supplier,
-                "Quantity": rm_qty,
-                "Total Cost (LKR)": total_cost_rm,
-                "Expiry Date": str(expiry_date),
-                "Recorded By": st.session_state.current_user
-            })
-            st.success("Raw Material Record Saved Successfully!")
-
-    if st.session_state.rm_logs:
-        st.subheader("Raw Materials Stock & Sourcing Log")
-        rm_df = pd.DataFrame(st.session_state.rm_logs)
-        st.table(rm_df)
-        if st.session_state.user_role == "Admin":
-            st.download_button("📥 Download Raw Materials Report (CSV)", rm_df.to_csv(index=False).encode('utf-8'), "raw_materials_report.csv", "text/csv")
-
-# --- TAB 5: DEALERS DIRECTORY (LOCAL & FOREIGN - ADMIN ONLY ACCESS) ---
+# --- TAB 5: DEALERS DIRECTORY (LOCAL & FOREIGN - ADMIN ONLY) ---
 with tabs[4]:
     st.header("Local & Foreign Dealers Directory (Secure Confidential)")
     
-    # STRICT SECURITY: ONLY ADMIN CAN VIEW AND ADD DEALERS
     if st.session_state.user_role == "Admin":
         st.markdown("දේශීය සහ විදේශීය ඩීලර්වරුන්ගේ (ಉదా: Sweden ඩීලර්) විස්තර ආරක්ෂිතව ඇතුළත් කර සුරකින්න.")
         
@@ -359,7 +396,7 @@ with tabs[4]:
         else:
             st.info("No dealers registered yet.")
     else:
-        st.error("🔒 රහස්‍යභාවය සුරක්ෂිත කිරීම සඳහා ඩීලර්ස් නාමාවලිය (Dealers Directory) බැලීමේ සහ ඇතුළත් කිරීමේ පූර්ණ අවසරය ඇත්තේ ඇඩ්මින් (ක්‍රිශන් දමිත්) වෙත පමණි.")
+        st.error("🔒 රහස්‍යභාවය සුරක්ෂිත කිරීම සඳහා ඩීලර්ස් නාමාවලිය බැලීමේ සහ ඇතුළත් කිරීමේ පූර්ණ අවසරය ඇත්තේ ඇඩ්මින් (ක්‍රිශන් දමිත්) වෙත පමණි.")
 
 # --- TAB 6: OFFICIAL LETTERS & MEMOS ---
 with tabs[5]:
@@ -367,7 +404,7 @@ with tabs[5]:
     with st.form("letter_form"):
         col_l1, col_l2 = st.columns(2)
         with col_l1:
-            doc_type = st.selectbox("Document Type", ["Inbound Letter (לැබුණු ලිපිය)", "Outbound Memo (යැවූ ලිපිය/මීමොව)", "Corporate Notice"])
+            doc_type = st.selectbox("Document Type", ["Inbound Letter (ලැබුණු ලිපිය)", "Outbound Memo (යැවූ ලිපිය/මීමොව)", "Corporate Notice"])
             subject_title = st.text_input("Subject / Title (විෂය)")
             sender_receiver = st.text_input("Sender / Recipient Name (අදාළ පාර්ශ්වය)")
         with col_l2:
@@ -397,7 +434,7 @@ with tabs[5]:
         if st.session_state.user_role == "Admin":
             st.download_button("📥 Download Letters Report (CSV)", letters_df.to_csv(index=False).encode('utf-8'), "letters_memos_report.csv", "text/csv")
 
-# --- TAB 7: PROFESSIONAL INVOICE GENERATOR ---
+# --- TAB 7: PROFESSIONAL INVOICE GENERATOR (DEDUCTS TABLET STOCK) ---
 with tabs[6]:
     st.header("Official Invoice Generator (Tablets Quantity-wise)")
     col_inf1, col_inf2 = st.columns(2)
@@ -449,6 +486,13 @@ with tabs[6]:
             grand_total = sum([item["Total"] for item in st.session_state.invoice_cart])
             total_tablets_count = sum([item["Qty"] for item in st.session_state.invoice_cart])
             
+            # Deduct from finished tablet stock
+            for cart_item in st.session_state.invoice_cart:
+                v_name = cart_item["Variant"]
+                v_qty = cart_item["Qty"]
+                if v_name in st.session_state.tablet_stock:
+                    st.session_state.tablet_stock[v_name] = max(0, st.session_state.tablet_stock[v_name] - v_qty)
+
             st.session_state.orders.append({
                 "Invoice No": inv_no,
                 "Date": datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -462,7 +506,7 @@ with tabs[6]:
                 "Issued By": st.session_state.current_user
             })
             
-            st.success("Invoice generated and saved successfully!")
+            st.success("Invoice generated, stock updated, and saved successfully!")
 
         if st.session_state.orders:
             latest_order = st.session_state.orders[-1]
@@ -555,7 +599,7 @@ with tabs[6]:
 # --- TAB 8: DIRECTORS & FILTERABLE RECORDS DASHBOARD ---
 with tabs[7]:
     st.header("Directors' Filterable Records & Management Dashboard")
-    st.markdown("අධ්‍‍යක්ෂකවරුන්ට අවශ්‍ය වාර්තා වර්ගය තෝරා (Filter කර) නැරඹිය හැක. (ඩවුන්ලෝඩ් බලය ඇඩ්මින් සතුය)")
+    st.markdown("අධ්‍යක්ෂකවරුන්ට අවශ්‍ය වාර්තා වර්ගය තෝරා (Filter කර) නැරඹිය හැක. (ඩවුන්ලෝඩ් බලය ඇඩ්මින් සතුය)")
 
     report_category = st.selectbox("Select Report Category to View", [
         "Batch Production Records (BPR)",
