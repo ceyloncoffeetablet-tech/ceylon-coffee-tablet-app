@@ -19,8 +19,8 @@ if 'rd_logs' not in st.session_state:
     st.session_state.rd_logs = []
 if 'rm_logs' not in st.session_state:
     st.session_state.rm_logs = []
-if 'current_cart' not in st.session_state:
-    st.session_state.current_cart = []
+if 'invoice_cart' not in st.session_state:
+    st.session_state.invoice_cart = []
 
 st.title("Ceylon Coffee Tablets (Pvt) Ltd - Enterprise System")
 st.markdown("*Drop it. Dissolve it. Done. | Corporate Management Portal*")
@@ -30,7 +30,7 @@ tabs = st.tabs([
     "📊 Cost Analysis", 
     "🧪 Lab & R&D Reports", 
     "📦 Raw Materials (RM-LOG)", 
-    "📄 Invoice & Order Generator", 
+    "📄 Professional Invoice Generator", 
     "📋 Directors & All Records"
 ])
 
@@ -95,8 +95,6 @@ with tabs[1]:
 # --- TAB 3: RAW MATERIALS (RM-LOG) ---
 with tabs[2]:
     st.header("Raw Materials Inventory & Sourcing Management (RM-LOG)")
-    st.markdown("Track raw material sources, supplier details, purchase costs, quantities, and expiry periods.")
-    
     with st.form("rm_form"):
         c1, c2, c3 = st.columns(3)
         with c1:
@@ -125,94 +123,90 @@ with tabs[2]:
         st.subheader("Raw Materials Stock & Sourcing Log")
         st.table(st.session_state.rm_logs)
 
-# --- TAB 4: PROFESSIONAL INVOICE & ORDER GENERATOR ---
+# --- TAB 4: PROFESSIONAL INVOICE GENERATOR ---
 with tabs[3]:
-    st.header("Multi-Item Invoice & Order Generator")
-    st.markdown("Select pricing type (Retail or Trade), add multiple variants, enter customer details, and generate official invoices.")
+    st.header("Official Invoice Generator (Tablets Quantity-wise)")
+    st.markdown("පාරිභෝගික විස්තර හිස්තැන්වලට ඇතුළත් කර, අවශ්‍ය ටැබ්ලට් වර්ග සහ ප්‍රමාණය (Tablets Qty) එකතු කර නිල ඉන්වොයිසිය සකස් කරගන්න.")
 
-    with st.form("customer_details_form"):
-        st.subheader("1. Customer & Pricing Setup")
-        c_name = st.text_input("Customer / Business Name", value="D.F.R perera")
-        c_phone = st.text_input("Telephone Number", value="+94 77 123 4567")
-        c_address = st.text_area("Delivery Address", value="49/2/2 Thekkawatta road\nThannakumbura\nKandy")
-        pricing_type = st.selectbox("Select Pricing Category", ["Retail Price", "Trade Price"])
-        save_cust_info = st.form_submit_button("Lock Customer Details")
-        if save_cust_info:
-            st.success("Customer details locked for current invoice!")
+    col_inf1, col_inf2 = st.columns(2)
+    with col_inf1:
+        inv_no = st.text_input("Invoice Number", value=f"CET {len(st.session_state.orders)+1010}")
+        cust_name = st.text_input("Customer Name (Deliver To)", value="")
+        cust_phone = st.text_input("Telephone Number", value="")
+    with col_inf2:
+        pricing_type = st.selectbox("Pricing Category", ["Retail Price", "Trade Price"])
+        cust_address = st.text_area("Delivery Address", value="")
 
     st.markdown("---")
-    st.subheader("2. Add Tablet Variants to Invoice Cart")
-    with st.form("add_item_form"):
-        col_a, col_b = st.columns(2)
-        with col_a:
-            item_variant = st.selectbox("Select Tablet Variant", [
-                "Black Coffee (Light Roast) - 15 Tablets Pack", 
-                "Black Coffee (Dark Roast) - 15 Tablets Pack", 
-                "Cinnamon Coffee 15 Tablets Pack", 
-                "Ginger Coffee 15 Tablets Pack"
-            ])
-        with col_b:
-            item_qty = st.number_input("Quantity (Packs / Units)", min_value=1, value=1)
-            
-        add_to_cart_btn = st.form_submit_button("Add Item to Cart")
-        if add_to_cart_btn:
+    st.subheader("Add Coffee Variant & Tablet Quantity")
+    
+    with st.form("add_cart_form"):
+        c_var = st.selectbox("Select Coffee Variant", [
+            "Black Coffee (Light Roast)", 
+            "Black Coffee (Dark Roast)", 
+            "Cinnamon Coffee", 
+            "Ginger Coffee"
+        ])
+        c_tablets_qty = st.number_input("Tablets Quantity (ටැබ්ලට් ගණන)", min_value=1, value=10)
+        add_btn = st.form_submit_button("Add Item to Invoice Cart")
+        
+        if add_btn:
             unit_price = st.session_state.retail_price if pricing_type == "Retail Price" else st.session_state.trade_price
-            st.session_state.current_cart.append({
-                "Variant": item_variant,
-                "Qty": item_qty,
+            st.session_state.invoice_cart.append({
+                "Variant": c_var,
+                "Qty": c_tablets_qty,
                 "Unit Price": unit_price,
-                "Total": item_qty * unit_price
+                "Total": c_tablets_qty * unit_price
             })
-            st.success(f"Added {item_variant} ({item_qty} units) to cart!")
+            st.success(f"Added {c_tablets_qty} tablets of {c_var} to invoice cart!")
 
-    if st.session_state.current_cart:
-        st.subheader("Current Cart Items")
-        cart_df = pd.DataFrame(st.session_state.current_cart)
+    if st.session_state.invoice_cart:
+        st.subheader("Current Invoice Items")
+        cart_df = pd.DataFrame(st.session_state.invoice_cart)
         st.table(cart_df)
         
-        col_act1, col_act2 = st.columns(2)
-        with col_act1:
+        c_btn1, c_btn2 = st.columns(2)
+        with c_btn1:
             if st.button("Clear Cart"):
-                st.session_state.current_cart = []
+                st.session_state.invoice_cart = []
                 st.rerun()
-        with col_act2:
-            finalize_order = st.button("Generate Official Invoice & Save Order")
+        with c_btn2:
+            generate_final = st.button("Generate & Save Official Invoice")
 
-        if finalize_order:
-            grand_total = sum([item["Total"] for item in st.session_state.current_cart])
-            total_tablets_count = sum([item["Qty"] for item in st.session_state.current_cart])
+        if generate_final:
+            grand_total = sum([item["Total"] for item in st.session_state.invoice_cart])
+            total_tablets_count = sum([item["Qty"] for item in st.session_state.invoice_cart])
             
-            invoice_no = f"CET {len(st.session_state.orders)+1010}"
-            
-            # Save to global orders history for Directors
+            # Save to global records
             st.session_state.orders.append({
-                "Invoice No": invoice_no,
+                "Invoice No": inv_no,
                 "Date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                "Customer": c_name,
-                "Phone": c_phone,
-                "Address": c_address,
+                "Customer": cust_name if cust_name else "Guest Customer",
+                "Phone": cust_phone,
+                "Address": cust_address,
                 "Type": pricing_type,
-                "Items Count": len(st.session_state.current_cart),
                 "Total Tablets": total_tablets_count,
                 "Grand Total (LKR)": grand_total,
-                "Cart Details": st.session_state.current_cart.copy()
+                "Cart Details": st.session_state.invoice_cart.copy()
             })
             
-            st.success("Order finalized and saved to records successfully!")
+            st.success("Invoice generated and saved successfully!")
 
-            # Render Official Printable Invoice Layout matching user requirement
+            # Render Exact Official Layout Matching Image Structure
             cart_rows_html = ""
-            for idx, cart_item in enumerate(st.session_state.current_cart, 1):
+            for idx, cart_item in enumerate(st.session_state.invoice_cart, 1):
                 cart_rows_html += f"""
                     <tr style="border-bottom: 1px solid #ddd; font-size: 13px;">
                         <td style="padding: 10px; text-align: center;">{idx:02d}</td>
-                        <td style="padding: 10px;">{cart_item['Variant']} ({pricing_type})</td>
+                        <td style="padding: 10px;">{cart_item['Variant']} ({cart_item['Qty']} Tablets)</td>
                         <td style="padding: 10px; text-align: center;">{cart_item['Qty']}</td>
                         <td style="padding: 10px; text-align: right;">{cart_item['Unit Price']:,.2f}</td>
                         <td style="padding: 10px; text-align: right;">{cart_item['Total']:,.2f}</td>
                     </tr>
                 """
 
+            formatted_address = cust_address.replace(chr(10), '<br>') if cust_address else "No Address Provided"
+            
             invoice_html = f"""
             <div style="border: 2px solid #5a3825; padding: 25px; border-radius: 8px; font-family: Arial, sans-serif; background-color: #ffffff; color: #000000; margin-top: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #5a3825; padding-bottom: 15px;">
@@ -222,14 +216,14 @@ with tabs[3]:
                     </div>
                     <div style="text-align: right;">
                         <h1 style="margin: 0; color: #5a3825; font-size: 26px; letter-spacing: 2px;">INVOICE</h1>
-                        <p style="margin: 5px 0; font-size: 13px;"><b>Invoice No:</b> {invoice_no}<br><b>Date:</b> {datetime.now().strftime('%d b, %Y')}</p>
+                        <p style="margin: 5px 0; font-size: 13px;"><b>Invoice No:</b> {inv_no}<br><b>Date:</b> {datetime.now().strftime('%d %b, %Y')}</p>
                     </div>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; margin-top: 20px; gap: 20px;">
                     <div style="flex: 1; border: 1px solid #c8b198; padding: 12px; border-radius: 5px; background-color: #fdfbf7;">
                         <p style="margin: 0 0 5px 0; font-size: 11px; color: #8c6239; font-weight: bold;">DELIVER TO</p>
-                        <p style="margin: 0; font-size: 13px; line-height: 1.4;"><b>{c_name}</b><br>{c_address.replace(chr(10), '<br>')}<br>TP: {c_phone}</p>
+                        <p style="margin: 0; font-size: 13px; line-height: 1.4;"><b>{cust_name if cust_name else '[Customer Name]'}</b><br>{formatted_address}<br>TP: {cust_phone if cust_phone else '[Phone Number]'}</p>
                     </div>
                     <div style="flex: 1; border: 1px solid #bce8f1; padding: 12px; border-radius: 5px; background-color: #f4f8fb;">
                         <p style="margin: 0 0 5px 0; font-size: 11px; color: #31708f; font-weight: bold;">BANK DETAILS FOR PAYMENT</p>
@@ -269,28 +263,27 @@ with tabs[3]:
             </div>
             """
             st.markdown(invoice_html, unsafe_allow_html=True)
-            st.info("💡 **මෙම ඉන්වොයිසිය PDF ලෙස ලබාගැනීමට:** බ්‍රවුසර් එකේ `Ctrl+P` (Windows) හෝ `Cmd+P` (Mac) ඔබා 'Save as PDF' තෝරාගන්න.")
+            st.markdown("---")
+            st.info("🖨️ **ඉන්වොයිසිය ඩවුන්ලෝඩ් කර ගැනීමට:** ඔබේ කීබෝඩ් එකෙන් **`Ctrl + P`** (Windows) හෝ **`Cmd + P`** (Mac) ඔබා **'Save as PDF'** තෝරාගන්න.")
 
 # --- TAB 5: DIRECTORS & ALL RECORDS ---
 with tabs[4]:
     st.header("Directors' Management Report & All Orders History")
-    st.markdown("Monthly and overall summary of dispatches, orders, total tablet quantities sold, and revenue for corporate directors.")
+    st.markdown("මාසිකව සහ දිනපතා නිකුත් කළ ටැබ්ලට් ප්‍රමාණයන් සහ ඇණවුම් විස්තර මෙහි දැක්වේ.")
 
     if st.session_state.orders:
-        # Calculate summary metrics
         total_orders_count = len(st.session_state.orders)
         total_tablets_dispatched = sum([order["Total Tablets"] for order in st.session_state.orders])
         total_revenue = sum([order["Grand Total (LKR)"] for order in st.session_state.orders])
 
         m1, m2, m3 = st.columns(3)
         m1.metric("Total Orders Dispatched", total_orders_count)
-        m2.metric("Total Tablets Sold", total_tablets_dispatched)
+        m2.metric("Total Tablets Dispatched", total_tablets_dispatched)
         m3.metric("Total Revenue (LKR)", f"LKR {total_revenue:,.2f}")
 
         st.markdown("---")
-        st.subheader("Detailed Orders Ledger")
+        st.subheader("Orders Ledger")
         
-        # Display simplified table for directors
         display_orders = []
         for ord_item in st.session_state.orders:
             display_orders.append({
@@ -307,4 +300,4 @@ with tabs[4]:
             st.session_state.orders = []
             st.rerun()
     else:
-        st.info("No orders recorded yet. Generate invoices from the 'Invoice & Order Generator' tab to populate this dashboard.")
+        st.info("No orders recorded yet.")
