@@ -155,52 +155,96 @@ with tabs[3]:
             })
             st.success("Trade Order Saved Successfully!")
 
-# --- TAB 5: PROFESSIONAL INVOICE GENERATOR ---
+# --- TAB 5: PROFESSIONAL INVOICE GENERATOR (MATCHING EXACT IMAGE STRUCTURE) ---
 with tabs[4]:
-    st.header("Professional Invoice Generator & Downloader")
-    st.markdown("Enter customer details and select pricing type to generate a printable invoice layout.")
+    st.header("Professional Invoice Generator (Official Layout)")
     
     with st.form("invoice_form"):
-        inv_no = st.text_input("Invoice Number", value=f"INV-CCT-{datetime.now().strftime('%Y%m%d')}-01")
-        i_name = st.text_input("Customer / Business Name")
-        i_address = st.text_area("Billing / Delivery Address")
-        i_phone = st.text_input("Contact Telephone Number")
+        inv_no = st.text_input("Invoice Number", value="CET 0010")
+        i_name = st.text_input("Customer Name (Deliver To)", value="D.F.R perera")
+        i_address = st.text_area("Delivery Address", value="49/2/2 Thekkawatta road\nThannakumbura\nKandy")
         
         col_i1, col_i2 = st.columns(2)
         with col_i1:
-            i_variant = st.selectbox("Product Variant", ["Black Coffee", "Ginger Coffee", "Cinnamon Coffee"], key="inv_var")
-            i_type = st.selectbox("Pricing Type", ["Retail Price", "Trade Price"], key="inv_type")
+            i_variant = st.selectbox("Item Description / Variant", [
+                "Black Coffee (Light Roast) - 15 Tablets Pack", 
+                "Black Coffee (Dark Roast) - 15 Tablets Pack", 
+                "Cinnamon Coffee 15 Tablets Pack", 
+                "Ginger Coffee 15 Tablets Pack"
+            ])
+            unit_p = st.number_input("Unit Price (LKR)", value=975.00, step=5.00)
         with col_i2:
-            i_qty = st.number_input("Quantity (Tablets)", min_value=1, value=50, key="inv_qty")
+            i_qty = st.number_input("Quantity (QTY)", min_value=1, value=1)
             
-        generate_btn = st.form_submit_button("Generate Invoice Preview")
+        generate_btn = st.form_submit_button("Generate Official Invoice")
 
-    if generate_btn and i_name:
-        unit_p = st.session_state.retail_price if i_type == "Retail Price" else st.session_state.trade_price
-        sub_total = i_qty * unit_p
+    if generate_btn:
+        total_price = i_qty * unit_p
         
-        st.markdown("---")
-        st.markdown("### 🏛️ CEYLON COFFEE TABLETS (PVT) LTD")
-        st.markdown("**Corporate Invoice / Receipt**")
-        st.write(f"**Invoice No:** {inv_no}")
-        st.write(f"**Date:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-        st.markdown("---")
-        
-        st.write(f"**Billed To:**\n- Name: {i_name}\n- Address: {i_address}\n- Phone: {i_phone}")
-        st.markdown("---")
-        
-        invoice_data = [{
-            "Item Description": f"Ceylon Coffee Tablets ({i_variant}) - {i_type}",
-            "Quantity": i_qty,
-            "Unit Price (LKR)": f"{unit_p:.2f}",
-            "Total (LKR)": f"{sub_total:.2f}"
-        }]
-        st.table(invoice_data)
-        st.markdown(f"### **Grand Total: LKR {sub_total:.2f}**")
-        st.markdown("---")
-        st.markdown("*Thank you for choosing Ceylon Coffee Tablets! | Drop it. Dissolve it. Done.*")
-        
-        st.info("💡 **How to Print / Save as PDF:** Press `Ctrl+P` (Windows) or `Cmd+P` (Mac) in your browser and select 'Save as PDF' to send this invoice directly to your customer.")
+        # Render Invoice HTML matching the exact structure from the image
+        invoice_html = f"""
+        <div style="border: 2px solid #5a3825; padding: 25px; border-radius: 8px; font-family: Arial, sans-serif; background-color: #ffffff; color: #000000;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #5a3825; padding-bottom: 15px;">
+                <div>
+                    <h2 style="margin: 0; color: #5a3825; font-size: 22px;">CEYLON COFFEE TABLETS (PVT) LTD</h2>
+                    <p style="margin: 3px 0; font-size: 12px; color: #555;">No 173, Hepana, Pilimathalawa<br>TP: +94 76 367 6856</p>
+                </div>
+                <div style="text-align: right;">
+                    <h1 style="margin: 0; color: #5a3825; font-size: 26px; letter-spacing: 2px;">INVOICE</h1>
+                    <p style="margin: 5px 0; font-size: 13px;"><b>Invoice No:</b> {inv_no}<br><b>Date:</b> {datetime.now().strftime('%d %b, %Y')}</p>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-top: 20px; gap: 20px;">
+                <div style="flex: 1; border: 1px solid #c8b198; padding: 12px; border-radius: 5px; background-color: #fdfbf7;">
+                    <p style="margin: 0 0 5px 0; font-size: 11px; color: #8c6239; font-weight: bold;">DELIVER TO</p>
+                    <p style="margin: 0; font-size: 13px; line-height: 1.4;"><b>{i_name}</b><br>{i_address.replace(chr(10), '<br>')}</p>
+                </div>
+                <div style="flex: 1; border: 1px solid #bce8f1; padding: 12px; border-radius: 5px; background-color: #f4f8fb;">
+                    <p style="margin: 0 0 5px 0; font-size: 11px; color: #31708f; font-weight: bold;">BANK DETAILS FOR PAYMENT</p>
+                    <p style="margin: 0; font-size: 12px; line-height: 1.4;"><b>Account Name:</b> CEYLON COFFEE TABLET (PVT) LTD<br><b>Account Number:</b> 141010054345<br><b>Bank:</b> Hatton National Bank (HNB)<br><b>Branch:</b> Pilimathalawa</p>
+                </div>
+            </div>
+            
+            <table style="width: 100%; margin-top: 25px; border-collapse: collapse;">
+                <thead>
+                    <tr style="background-color: #5a3825; color: #ffffff; font-size: 13px;">
+                        <th style="padding: 10px; text-align: center; width: 10%;">SUB</th>
+                        <th style="padding: 10px; text-align: left; width: 50%;">ITEM DESCRIPTION</th>
+                        <th style="padding: 10px; text-align: center; width: 10%;">QTY</th>
+                        <th style="padding: 10px; text-align: right; width: 15%;">UNIT PRICE (LKR)</th>
+                        <th style="padding: 10px; text-align: right; width: 15%;">TOTAL (LKR)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #ddd; font-size: 13px;">
+                        <td style="padding: 10px; text-align: center;">01</td>
+                        <td style="padding: 10px;">{i_variant}</td>
+                        <td style="padding: 10px; text-align: center;">{i_qty}</td>
+                        <td style="padding: 10px; text-align: right;">{unit_p:.2f}</td>
+                        <td style="padding: 10px; text-align: right;">{total_price:.2f}</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px;">
+                <div style="border: 1px dashed #b5835a; padding: 8px 12px; border-radius: 4px; font-size: 12px; color: #5a3825; background-color: #faf4ed;">
+                    Note: + Delivery Fee
+                </div>
+                <div style="border: 2px solid #5a3825; padding: 12px 25px; border-radius: 6px; text-align: right; background-color: #fff;">
+                    <p style="margin: 0; font-size: 11px; color: #666; font-weight: bold;">TOTAL AMOUNT</p>
+                    <h2 style="margin: 5px 0 0 0; color: #5a3825; font-size: 22px;">{total_price:,.2f} LKR</h2>
+                </div>
+            </div>
+            
+            <div style="margin-top: 35px; border: 1px solid #e0d0c0; background-color: #faf6f0; padding: 12px; text-align: center; border-radius: 5px;">
+                <p style="margin: 0; color: #5a3825; font-weight: bold; font-size: 14px;">Thank you for your Order!</p>
+                <p style="margin: 3px 0 0 0; font-size: 11px; color: #666;">Ceylon Coffee Tablets (Pvt) Ltd — Quality Sri Lankan Specialty Coffee Products</p>
+            </div>
+        </div>
+        """
+        st.markdown(invoice_html, unsafe_allow_html=True)
+        st.info("💡 **ඉන්වොයිසිය PDF ලෙස ලබාගැනීමට:** බ්‍රවුසර් එකේ `Ctrl+P` (Windows) හෝ `Cmd+P` (Mac) ඔබා 'Save as PDF' තෝරාගන්න.")
 
 # --- TAB 6: ALL RECORDS ---
 with tabs[5]:
