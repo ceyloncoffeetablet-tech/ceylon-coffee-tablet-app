@@ -1,11 +1,26 @@
 import streamlit as st
 from datetime import datetime
 import pandas as pd
-import base64
 
 st.set_page_config(page_title="Ceylon Coffee Tablets - Enterprise Portal", layout="wide")
 
-# Session State Initialization
+# --- USER AUTHENTICATION & DIRECTORS ACCESS CONTROL ---
+USERS = {
+    "Krishan Damith": {"pin": "admin123", "role": "Admin"},
+    "Shehan Maduranga": {"pin": "shehan2026", "role": "Director"},
+    "Kanishka Dulanjana": {"pin": "kanishka2026", "role": "Director"},
+    "Chanuka Vinod": {"pin": "chanuka2026", "role": "Director"},
+    "Pasindu Sachintha": {"pin": "pasindu2026", "role": "Director"}
+}
+
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+if 'current_user' not in st.session_state:
+    st.session_state.current_user = ""
+if 'user_role' not in st.session_state:
+    st.session_state.user_role = ""
+
+# Session State Initialization for Business Data
 if 'retail_price' not in st.session_state:
     st.session_state.retail_price = 50.00
 if 'trade_price' not in st.session_state:
@@ -14,6 +29,9 @@ if 'mfg_cost' not in st.session_state:
     st.session_state.mfg_cost = 41.95
 if 'courier_cost' not in st.session_state:
     st.session_state.courier_cost = 4.05
+if 'prices_locked' not in st.session_state:
+    st.session_state.prices_locked = False
+
 if 'orders' not in st.session_state:
     st.session_state.orders = []
 if 'rd_logs' not in st.session_state:
@@ -23,33 +41,108 @@ if 'rm_logs' not in st.session_state:
 if 'invoice_cart' not in st.session_state:
     st.session_state.invoice_cart = []
 
+# --- LOGIN SCREEN ---
+if not st.session_state.logged_in:
+    st.markdown("<h2 style='text-align: center; color: #5a3825;'>Ceylon Coffee Tablets (Pvt) Ltd</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #666;'>Corporate Management Portal — Secure Directors Login</p>", unsafe_allow_html=True)
+    
+    col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
+    with col_l2:
+        with st.form("login_form"):
+            selected_user = st.selectbox("Select Director / User", list(USERS.keys()))
+            entered_pin = st.text_input("Enter Passcode / PIN", type="password")
+            login_btn = st.form_submit_button("Secure Login")
+            
+            if login_btn:
+                if USERS[selected_user]["pin"] == entered_pin:
+                    st.session_state.logged_in = True
+                    st.session_state.current_user = selected_user
+                    st.session_state.user_role = USERS[selected_user]["role"]
+                    st.success(f"Welcome, {selected_user} ({st.session_state.user_role})!")
+                    st.rerun()
+                else:
+                    st.error("Invalid Passcode! Please check your credentials.")
+    st.stop()
+
+# --- SIDEBAR USER & LOCK STATUS ---
+st.sidebar.title("System Status")
+st.sidebar.write(f"👤 **User:** {st.session_state.current_user}")
+st.sidebar.write(f"🛡️ **Role:** {st.session_state.user_role}")
+
+if st.session_state.prices_locked:
+    st.sidebar.error("🔒 Cost & Pricing Structure is **LOCKED**")
+else:
+    st.sidebar.success("🔓 Cost & Pricing Structure is **UNLOCKED**")
+
+if st.sidebar.button("Logout"):
+    st.session_state.logged_in = False
+    st.session_state.current_user = ""
+    st.session_state.user_role = ""
+    st.rerun()
+
 st.title("Ceylon Coffee Tablets (Pvt) Ltd - Enterprise System")
 st.markdown("*Drop it. Dissolve it. Done. | Corporate Management Portal*")
 
 # Navigation Tabs
 tabs = st.tabs([
-    "📊 Cost Analysis", 
+    "📊 Cost & Pricing (Secure)", 
     "🧪 Lab & R&D Reports", 
     "📦 Raw Materials (RM-LOG)", 
     "📄 Professional Invoice Generator", 
     "📋 Directors & All Records"
 ])
 
-# --- TAB 1: COST & PROFIT ANALYSIS ---
+# --- TAB 1: COST & PROFIT ANALYSIS & LOCK CONTROL ---
 with tabs[0]:
     st.header("Tablet Production Cost & Profit Structure Analysis")
+    
+    if st.session_state.prices_locked:
+        st.warning("🔒 **මෙම මිල ගණන් සහ නිෂ්පාදන පිරිවැය මේ වන විට ADMIN විසින් Lock කර ඇත.** වෙනස් කිරීම් සිදුකිරීමට අවශ්‍ය නම් Admin (ක්‍රිශන් දමිත්) අතින් එය Unlock කළ යුතුය.")
+    else:
+        st.info("🔓 පද්ධතිය දැනට Unlock කර ඇත. Admin කෙනෙකුට අවශ්‍ය වෙනස්කම් සිදු කර අවසානයේ එය Lock කළ හැක.")
+
+    # Admin Lock/Unlock Controls
+    if st.session_state.user_role == "Admin":
+        col_lk1, col_lk2 = st.columns(2)
+        with col_lk1:
+            if not st.session_state.prices_locked:
+                if st.button("🔒 Lock Costs & Prices Now"):
+                    st.session_state.prices_locked = True
+                    st.success("Costs and Prices have been securely locked!")
+                    st.rerun()
+        with col_lk2:
+            if st.session_state.prices_locked:
+                if st.button("🔓 Unlock Costs & Prices (Admin Only)"):
+                    st.session_state.prices_locked = False
+                    st.success("Costs and Prices have been unlocked for editing.")
+                    st.rerun()
+    else:
+        st.markdown("*සටහන: මිල ගණන් සහ පිරිවැය වෙනස් කිරීමේ හෝ Lock/Unlock කිරීමේ බලය ඇත්තේ ඇඩ්මින් (ක්‍රිශන් දමිත්) වෙත පමණි.*")
+
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Cost Inputs")
-        st.session_state.mfg_cost = st.number_input("Manufacturing Cost per Tablet (LKR)", value=float(st.session_state.mfg_cost), step=0.05)
-        st.session_state.courier_cost = st.number_input("Courier & Packing Cost per Tablet (LKR)", value=float(st.session_state.courier_cost), step=0.05)
+        # Disable inputs if locked or if user is not Admin
+        is_disabled = st.session_state.prices_locked or (st.session_state.user_role != "Admin")
+        
+        mfg_input = st.number_input("Manufacturing Cost per Tablet (LKR)", value=float(st.session_state.mfg_cost), step=0.05, disabled=is_disabled)
+        courier_input = st.number_input("Courier & Packing Cost per Tablet (LKR)", value=float(st.session_state.courier_cost), step=0.05, disabled=is_disabled)
+        
+        if not is_disabled:
+            st.session_state.mfg_cost = mfg_input
+            st.session_state.courier_cost = courier_input
+
         total_cost = st.session_state.mfg_cost + st.session_state.courier_cost
         st.info(f"**Total Landed Cost / Tablet:** LKR {total_cost:.2f}")
 
     with col2:
         st.subheader("Selling Price Inputs")
-        st.session_state.retail_price = st.number_input("Retail Selling Price / Tablet (LKR)", value=float(st.session_state.retail_price), step=0.50)
-        st.session_state.trade_price = st.number_input("Trade Selling Price / Tablet (LKR)", value=float(st.session_state.trade_price), step=0.50)
+        retail_input = st.number_input("Retail Selling Price / Tablet (LKR)", value=float(st.session_state.retail_price), step=0.50, disabled=is_disabled)
+        trade_input = st.number_input("Trade Selling Price / Tablet (LKR)", value=float(st.session_state.trade_price), step=0.50, disabled=is_disabled)
+        
+        if not is_disabled:
+            st.session_state.retail_price = retail_input
+            st.session_state.trade_price = trade_input
 
     st.markdown("---")
     st.subheader("Profit Margins Calculation")
@@ -68,11 +161,12 @@ with tabs[0]:
         "Courier Cost": st.session_state.courier_cost,
         "Total Landed Cost": total_cost,
         "Retail Price": st.session_state.retail_price,
-        "Trade Price": st.session_state.trade_price
+        "Trade Price": st.session_state.trade_price,
+        "Status": "LOCKED" if st.session_state.prices_locked else "UNLOCKED"
     }])
     st.download_button("📥 Download Cost Analysis Report (CSV)", cost_data.to_csv(index=False).encode('utf-8'), "cost_analysis.csv", "text/csv")
 
-# --- TAB 2: LAB / R&D REPORTS (WITH PHOTO UPLOAD) ---
+# --- TAB 2: LAB / R&D REPORTS ---
 with tabs[1]:
     st.header("Lab & R&D Quality Control Reports (BPR-QC Master)")
     st.markdown("පරීක්ෂණ වාර්තා සඳහා අවශ්‍ය ඡායාරූප (Photos) උඩුගත කර වාර්තාව සුරකින්න.")
@@ -101,7 +195,8 @@ with tabs[1]:
                 "Coffee Weight (kg)": coffee_wt,
                 "Moisture": f"{moisture}%",
                 "Status": qc_status,
-                "Attached Photo": photo_name
+                "Attached Photo": photo_name,
+                "Recorded By": st.session_state.current_user
             })
             st.success("R&D Report Saved Successfully with Photo!")
 
@@ -134,7 +229,8 @@ with tabs[2]:
                 "Supplier / Source": supplier,
                 "Quantity": rm_qty,
                 "Total Cost (LKR)": total_cost_rm,
-                "Expiry Date": str(expiry_date)
+                "Expiry Date": str(expiry_date),
+                "Recorded By": st.session_state.current_user
             })
             st.success("Raw Material Record Saved Successfully!")
 
@@ -207,7 +303,8 @@ with tabs[3]:
                 "Type": pricing_type,
                 "Total Tablets": total_tablets_count,
                 "Grand Total (LKR)": grand_total,
-                "Cart Details": st.session_state.invoice_cart.copy()
+                "Cart Details": st.session_state.invoice_cart.copy(),
+                "Issued By": st.session_state.current_user
             })
             
             st.success("Invoice generated and saved successfully!")
@@ -273,7 +370,7 @@ with tabs[3]:
     
     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px;">
         <div style="border: 1px dashed #b5835a; padding: 8px 12px; border-radius: 4px; font-size: 12px; color: #5a3825; background-color: #faf4ed;">
-            Note: + Delivery Fee | Category: {latest_order['Type']}
+            Note: + Delivery Fee | Category: {latest_order['Type']}<br>Issued By: {latest_order.get('Issued By', 'Admin')}
         </div>
         <div style="border: 2px solid #5a3825; padding: 12px 25px; border-radius: 6px; text-align: right; background-color: #fff;">
             <p style="margin: 0; font-size: 11px; color: #666; font-weight: bold;">TOTAL AMOUNT</p>
@@ -289,7 +386,6 @@ with tabs[3]:
 </body>
 </html>"""
             
-            # HTML ගොනුව සෘජුවම බ්‍රව්සරයේ දෝෂයකින් තොරව පෙන්වීම සඳහා iframe වෙනුවට ඩවුන්ලෝඩ් ලින්ක් එක භාවිත කෙරේ.
             st.markdown("---")
             st.download_button(
                 label="📥 Download Official Invoice as HTML File (.html)",
@@ -298,7 +394,7 @@ with tabs[3]:
                 mime="text/html"
             )
             
-            st.info("💡 **PDF ලෙස ලබා ගැනීමට:** ඉහත ඩවුන්ලෝඩ් කරගත් HTML ගොනුව ඔබගේ පරිගණකයේ හෝ දුරකථනයේ බ්‍රව්සරයෙන් විවෘත කර, **`Ctrl + P`** (හෝ Print) ඔබා **'Save as PDF'** තෝරාගෙන පහසුවෙන් PDF එකක් කරගන්න.")
+            st.info("💡 **PDF ලෙස ලබා ගැනීමට:** ඉහත ඩවුන්ලෝඩ් කරගත් HTML ගොනුව ඔබගේ බ්‍රව්සරයෙන් විවෘත කර, **`Ctrl + P`** ඔබා **'Save as PDF'** තෝරාගෙන PDF එකක් ලෙස සේව් කරගන්න.")
 
 # --- TAB 5: DIRECTORS & ALL RECORDS ---
 with tabs[4]:
@@ -326,15 +422,17 @@ with tabs[4]:
                 "Customer": ord_item["Customer"],
                 "Type": ord_item["Type"],
                 "Total Tablets": ord_item["Total Tablets"],
-                "Grand Total (LKR)": f"{ord_item['Grand Total (LKR)']:,.2f}"
+                "Grand Total (LKR)": f"{ord_item['Grand Total (LKR)']:,.2f}",
+                "Issued By": ord_item.get("Issued By", "N/A")
             })
         orders_df = pd.DataFrame(display_orders)
         st.table(orders_df)
         
         st.download_button("📥 Download All Orders History Report (CSV)", orders_df.to_csv(index=False).encode('utf-8'), "all_orders_report.csv", "text/csv")
 
-        if st.button("Clear All Orders History"):
-            st.session_state.orders = []
-            st.rerun()
+        if st.session_state.user_role == "Admin":
+            if st.button("Clear All Orders History"):
+                st.session_state.orders = []
+                st.rerun()
     else:
         st.info("No orders recorded yet. දත්ත ඇතුළත් කළ පසු මෙහි වාර්තා දිස්වේ.")
