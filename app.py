@@ -139,7 +139,7 @@ if menu_selection == "🏠 Welcome & Overview":
     with col_w2:
         st.info("""
         📌 **පද්ධතියේ ප්‍රධාන විශේෂාංග:**
-        - **ස්වයංක්‍රීය බැච් සහ කල් ඉකුත්වීමේ දිනය:** නිෂ්පාදන දිනය අනුව බැච් අංකය සහ මාස 8ක කල් ඉකුත්වීමේ දිනය ස්වයංක්‍රීයව හැදීම.
+        - **ස්වයංක්‍රීය බැච් සහ කල් ඉකුත්වීමේ දිනය:** නිෂ්පාදන දිනය අනුව බැච් අංකය සහ මාස 8ක කල් ඉකුත්වීමේ දිනය ස්වයංක්‍‍රීයව හැදීම.
         - **ස්ටොක් කළමනාකරණය (Stores & Stock):** අමුද්‍රව්‍ය මිලදී ගැනීම්, නිෂ්පාදනයට අමුද්‍රව්‍ය අඩුවීම සහ ඉන්වොයිසි හරහා ටැබ්ලට් අලෙවි වූ විට ස්ටොක් එක ස්වයංක්‍රීයව යාවත්කාලීන වීම.
         - **බාහිර ලිපි සහ ලැබ් වාර්තා අප්‌ලෝඩ් කිරීම:** PDF හෝ පින්තූර (Images) අප්‌ලෝඩ් කර ඩිරෙක්ටර්ස් ඩෑෂ්බෝඩ් එකෙන් බලාප්‍රින්ට් කරගත හැක.
         
@@ -336,15 +336,14 @@ elif menu_selection == "📦 Stores & Stock":
             })
             st.success(f"Added {r_qty} of {r_item} to stores successfully!")
 
-# --- SECTION 4: LAB & R&D REPORTS (OUTSIDE FORM FOR PROPER FILE UPLOAD) ---
+# --- SECTION 4: LAB & R&D REPORTS (WITH FILE UPLOADER INSIDE FORM) ---
 elif menu_selection == "🧪 Lab & R&D Reports":
     st.header("Lab & R&D Quality Control Reports")
-    st.markdown("ලැබ් වාර්තාවේ PDF හෝ පින්තූරය (Image) පහතින් අප්‌ලෝඩ් කර විස්තර ඇතුළත් කරන්න.")
-
-    # Placed OUTSIDE form so file uploader retains state
-    uploaded_lab_file = st.file_uploader("Upload Lab Report (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="lab_file_uploader")
+    st.markdown("ලැබ් වාර්තාවේ PDF හෝ පින්තූරය (Image) අප්‌ලෝඩ් කර විස්තර ඇතුළත් කර **Save R&D Report** ඔබන්න.")
 
     with st.form("rd_form"):
+        uploaded_lab_file = st.file_uploader("Upload Lab Report (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="lab_file_uploader")
+        
         col1, col2, col3 = st.columns(3)
         with col1:
             batch_no = st.text_input("Batch Number (e.g., CCT260929)")
@@ -426,15 +425,14 @@ elif menu_selection == "🤝 Dealers Directory":
     else:
         st.error("🔒 රහස්‍යභාවය සුරක්ෂිත කිරීම සඳහා ඩීලර්ස් නාමාවලිය බැලීමේ සහ ඇතුළත් කිරීමේ පූර්ණ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
-# --- SECTION 6: LETTERS & MEMOS (OUTSIDE FORM FOR PROPER UPLOAD) ---
+# --- SECTION 6: LETTERS & MEMOS (WITH FILE UPLOADER INSIDE FORM) ---
 elif menu_selection == "✉️ Letters & Memos":
     st.header("Official Letters, Inbound/Outbound Memos & Documents")
-    st.markdown("ලිපියේ හෝ මීමොවේ PDF හෝ පින්තූරය (Image) පහතින් අප්‌ලෝඩ් කරන්න.")
-
-    # Placed OUTSIDE form
-    uploaded_letter_file = st.file_uploader("Upload Letter Document (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="letter_file_uploader")
+    st.markdown("ලිපියේ හෝ මීමොවේ PDF හෝ පින්තූරය (Image) අප්‌ලෝඩ් කර විස්තර ඇතුළත් කරන්න.")
 
     with st.form("letter_form"):
+        uploaded_letter_file = st.file_uploader("Upload Letter Document (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="letter_file_uploader")
+        
         col_l1, col_l2 = st.columns(2)
         with col_l1:
             doc_type = st.selectbox("Document Type", ["Inbound Letter (ලැබුණු ලිපිය)", "Outbound Memo (යැවූ ලිපිය/මීමොව)", "Corporate Notice"])
