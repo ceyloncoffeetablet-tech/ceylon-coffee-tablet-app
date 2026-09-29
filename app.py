@@ -103,7 +103,8 @@ menu_selection = st.sidebar.radio(
     "Select Section", 
     [
         "🏠 Welcome & Overview", 
-        "📊 Cost & Pricing", 
+        "📊 Unit Cost & Profitability Analysis", 
+        "📦 Sweden Export Order Cost Report", 
         "💸 Expenses Report", 
         "📈 Financial P&L & Profit Sharing", 
         "🏭 Batch Production (BPR)", 
@@ -138,399 +139,297 @@ if menu_selection == "🏠 Welcome & Overview":
     with col_w1:
         st.markdown("""
         ### අපගේ සංකල්පය සහ නිෂ්පාදනය
-        ශ්‍රී ලංකාවේ උසස්ම තත්වයේ අරාබිකා (Arabica) කෝපි බීජ මෙන්ම කුරුඳු (Cinnamon) සහ ඉඟුරු (Ginger) සාරය එකතු කරමින්, නවීන තාක්ෂණය යටතේ නිෂ්පාදනය කරනු ලබන **දියවන කෝපි ටැබ්ලට් (Soluble Coffee Tablets)** නිෂ්පාදනයේ ප්‍රමුඛයා වන්නේ **Ceylon Coffee Tablet (Pvt) Ltd** අප ආයතනයයි.
+        ශ්‍රී ලංකාවේ උසස්ම තත්වයේ අරාබිකා කෝපි බීජ මෙන්ම කුරුඳු සහ ඉඟුරු සාරය එකතු කරමින්, නවීන තාක්ෂණය යටතේ නිෂ්පාදනය කරනු ලබන **දියවන කෝපි ටැබ්ලට් (Soluble Coffee Tablets)** නිෂ්පාදනයේ ප්‍රමුඛයා වන්නේ **Ceylon Coffee Tablet (Pvt) Ltd** අප ආයතනයයි.
         """)
     with col_w2:
         st.info("""
-        📌 **නව අංගයන් සහ විශේෂාංග:**
-        - **Expenses Report (වියදම් වාර්තාව):** රෝ මැටීරියල්ස් (Coffee, Ginger, Cinnamon), Gloves, Masks, Sugar සහ වෙනත් උපකරණ මිලදී ගැනීම් සඳහා වන වියදම් වාර්තාගත කිරීම.
-        - **Financial P&L & Profit Sharing:** මුළු ආදායම, නිෂ්පාදන වියදම්, ශුද්ධ ලාභය (Net Profit), සමාගමේ වැඩිදියුණුවට නැවත ආයෝජනය (Reinvestment) සහ අධ්‍යක්ෂවරුන් 5 දෙනා අතර ලාභ බෙදීයාම.
-        - **ඩිරෙක්ටර්ස් ඩෑෂ්බෝඩ් (Directors Dashboard):** සියලුම වාර්තා මුද්‍රණය කිරීමට සහ ඩවුන්ලෝඩ් කර ගැනීමට ඇති හැකියාව.
+        📌 **ප්‍රධාන වාර්තා ටැබ් දෙක:**
+        1. **Unit Cost & Profitability Analysis:** කම්කරු ශ්‍රම පිරිවැය, මාසික නිෂ්පාදන ධාරිතාව, පොදු උපයෝගिता වියදම් (Electricity, Water, Gas, Gloves, Masks) සහ ටැබ්ලට් එකක පිරිවැය ගණනය කිරීමේ නිල ආකෘතිය.
+        2. **Sweden Export Order Cost Report:** ස්වීඩන් අපනයන ඇණවුම සඳහා අමුද්‍රව්‍ය පිරිවැය, මුළු පිරිවැය සහ ශුද්ධ ලාභය දැක්වෙන ආකෘතිය.
         """)
 
-# --- SECTION 1: COST & PROFIT ANALYSIS ---
-elif menu_selection == "📊 Cost & Pricing":
-    st.header("Tablet Production Cost & Profit Structure Analysis")
-    
-    if st.session_state.prices_locked:
-        st.warning("🔒 **මෙම මිල ගණන් සහ නිෂ්පාදන පිරිවැය මේ වන විට ADMIN විසින් Lock කර ඇත.**")
-    else:
-        st.info("🔓 පද්ධතිය දැනට Unlock කර ඇත.")
+# --- SECTION 1: UNIT COST & PROFITABILITY ANALYSIS ---
+elif menu_selection == "📊 Unit Cost & Profitability Analysis":
+    st.header("Unit Cost & Profitability Analysis")
+    st.markdown("Comprehensive Tablet Production & Order Financial Breakdown (Drop it. Dissolve it. Done.)")
 
-    if st.session_state.user_role == "Admin":
-        col_lk1, col_lk2 = st.columns(2)
-        with col_lk1:
-            if not st.session_state.prices_locked:
-                if st.button("🔒 Lock Costs & Prices Now"):
-                    st.session_state.prices_locked = True
-                    st.success("Costs and Prices have been securely locked!")
-                    st.rerun()
-        with col_lk2:
-            if st.session_state.prices_locked:
-                if st.button("🔓 Unlock Costs & Prices (Admin Only)"):
-                    st.session_state.prices_locked = False
-                    st.success("Costs and Prices have been unlocked for editing.")
-                    st.rerun()
-
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("Cost Inputs")
-        is_disabled = st.session_state.prices_locked or (st.session_state.user_role != "Admin")
-        
-        mfg_input = st.number_input("Manufacturing Cost per Tablet (LKR)", value=float(st.session_state.mfg_cost), step=0.05, disabled=is_disabled)
-        courier_input = st.number_input("Courier & Packing Cost per Tablet (LKR)", value=float(st.session_state.courier_cost), step=0.05, disabled=is_disabled)
-        
-        if not is_disabled:
-            st.session_state.mfg_cost = mfg_input
-            st.session_state.courier_cost = courier_input
-
-        total_cost = st.session_state.mfg_cost + st.session_state.courier_cost
-        st.info(f"**Total Landed Cost / Tablet:** LKR {total_cost:.2f}")
-
-    with col2:
-        st.subheader("Selling Price Inputs")
-        retail_input = st.number_input("Retail Selling Price / Tablet (LKR)", value=float(st.session_state.retail_price), step=0.50, disabled=is_disabled)
-        trade_input = st.number_input("Trade Selling Price / Tablet (LKR)", value=float(st.session_state.trade_price), step=0.50, disabled=is_disabled)
-        
-        if not is_disabled:
-            st.session_state.retail_price = retail_input
-            st.session_state.trade_price = trade_input
+    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+    col_m1.metric("Mfg. Cost / Tablet", "LKR 41.95")
+    col_m2.metric("Courier Cost / Tablet", "LKR 4.05")
+    col_m3.metric("Total Cost / Tablet", "LKR 46.00")
+    col_m4.metric("Selling Price / Tablet", "LKR 50.00")
 
     st.markdown("---")
-    st.subheader("Profit Margins Calculation")
-    p_col1, p_col2 = st.columns(2)
-    with p_col1:
-        retail_profit = st.session_state.retail_price - total_cost
-        retail_margin = (retail_profit / st.session_state.retail_price) * 100 if st.session_state.retail_price > 0 else 0
-        st.success(f"**Retail Profit per Tablet:** LKR {retail_profit:.2f} \n\n **Profit Margin:** {retail_margin:.2f}%")
-    with p_col2:
-        trade_profit = st.session_state.trade_price - total_cost
-        trade_margin = (trade_profit / st.session_state.trade_price) * 100 if st.session_state.trade_price > 0 else 0
-        st.warning(f"**Trade Profit per Tablet:** LKR {trade_profit:.2f} \n\n **Profit Margin:** {trade_margin:.2f}%")
+    st.subheader("1. Labor & Staffing Cost Calculation")
+    
+    labor_data = [
+        {"Component / Operational Detail": "Productivity Rate", "Standard Calculation Basis": "60 Tablets/hr + 7 Productive hrs/day = 420 Tablets/day/person", "Monthly Amount (LKR)": "-", "Cost per Tablet (LKR)": "-"},
+        {"Component / Operational Detail": "Monthly Target Capacity", "Standard Calculation Basis": "2 Workers x 400 Tablets x 20 Working Days = 8,000 Tablets", "Monthly Amount (LKR)": "-", "Cost per Tablet (LKR)": "-"},
+        {"Component / Operational Detail": "Staff Salaries", "Standard Calculation Basis": "2 Workers x LKR 35,000 / month", "Monthly Amount (LKR)": "70,000.00", "Cost per Tablet (LKR)": "8.75"},
+        {"Component / Operational Detail": "Staff Snacks & Allowance", "Standard Calculation Basis": "2 Workers x LKR 150/day x 20 Days", "Monthly Amount (LKR)": "6,000.00", "Cost per Tablet (LKR)": "0.75"},
+        {"Component / Operational Detail": "Total Labor Cost (Monthly Basis: 8,000 Tablets)", "Standard Calculation Basis": "Combined Labor Expenses", "Monthly Amount (LKR)": "76,000.00", "Cost per Tablet (LKR)": "9.50"}
+    ]
+    st.table(pd.DataFrame(labor_data))
 
-# --- SECTION 2: EXPENSES REPORT ---
+    st.subheader("2. Operational Overheads & Consumables")
+    overhead_data = [
+        {"Cost Center / Expense Item": "Electricity & Rent", "Details / Consumption Rate": "Monthly Overhead allocation", "Monthly Cost (LKR)": "5,000.00", "Cost per Tablet (LKR)": "0.62"},
+        {"Cost Center / Expense Item": "Water Usage", "Details / Consumption Rate": "Monthly Utility charge", "Monthly Cost (LKR)": "1,000.00", "Cost per Tablet (LKR)": "0.12"},
+        {"Cost Center / Expense Item": "LP Gas Usage", "Details / Consumption Rate": "12.5 kg Gas cylinder allocation (LKR 4,800 / 6)", "Monthly Cost (LKR)": "800.00", "Cost per Tablet (LKR)": "0.10"},
+        {"Cost Center / Expense Item": "Fuel & Transport", "Details / Consumption Rate": "Transport & dispatch expenses", "Monthly Cost (LKR)": "5,000.00", "Cost per Tablet (LKR)": "0.62"},
+        {"Cost Center / Expense Item": "Safety & Hygiene Consumables", "Details / Consumption Rate": "Gloves (8,960) + Masks (1,600) + Hairnets (4,000) + Sanitizer", "Monthly Cost (LKR)": "16,000.00", "Cost per Tablet (LKR)": "2.00"},
+        {"Cost Center / Expense Item": "Total Operational Overheads (Per Tablet)", "Details / Consumption Rate": "Sum of all Overheads", "Monthly Cost (LKR)": "27,800.00", "Cost per Tablet (LKR)": "3.46"}
+    ]
+    st.table(pd.DataFrame(overhead_data))
+
+    unit_analysis_html = """<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Unit Cost & Profitability Analysis Report</title></head>
+<body style="font-family: Arial, sans-serif; padding: 30px; color: #333;">
+    <h2 style="color: #5a3825; text-align: center;">CEYLON COFFEE TABLETS (PVT) LTD</h2>
+    <h3 style="text-align: center; color: #666;">Unit Cost & Profitability Analysis Report</h3>
+    <hr style="border: 1px solid #5a3825;">
+    <h4>1. Labor & Staffing Cost Calculation</h4>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <tr style="background-color: #5a3825; color: white;"><th style="padding: 8px; border: 1px solid #ddd;">Component</th><th style="padding: 8px; border: 1px solid #ddd;">Basis</th><th style="padding: 8px; border: 1px solid #ddd;">Monthly (LKR)</th><th style="padding: 8px; border: 1px solid #ddd;">Per Tablet (LKR)</th></tr>
+        <tr><td style="padding: 8px; border: 1px solid #ddd;">Staff Salaries</td><td style="padding: 8px; border: 1px solid #ddd;">2 Workers</td><td style="padding: 8px; border: 1px solid #ddd;">70,000.00</td><td style="padding: 8px; border: 1px solid #ddd;">8.75</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #ddd;">Staff Snacks & Allowance</td><td style="padding: 8px; border: 1px solid #ddd;">2 Workers x 20 Days</td><td style="padding: 8px; border: 1px solid #ddd;">6,000.00</td><td style="padding: 8px; border: 1px solid #ddd;">0.75</td></tr>
+        <tr style="font-weight: bold;"><td style="padding: 8px; border: 1px solid #ddd;">Total Labor Cost</td><td style="padding: 8px; border: 1px solid #ddd;">8,000 Tablets</td><td style="padding: 8px; border: 1px solid #ddd;">76,000.00</td><td style="padding: 8px; border: 1px solid #ddd;">9.50</td></tr>
+    </table>
+    <h4>2. Operational Overheads & Consumables</h4>
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr style="background-color: #5a3825; color: white;"><th style="padding: 8px; border: 1px solid #ddd;">Expense Item</th><th style="padding: 8px; border: 1px solid #ddd;">Details</th><th style="padding: 8px; border: 1px solid #ddd;">Monthly (LKR)</th><th style="padding: 8px; border: 1px solid #ddd;">Per Tablet (LKR)</th></tr>
+        <tr><td style="padding: 8px; border: 1px solid #ddd;">Electricity & Rent</td><td style="padding: 8px; border: 1px solid #ddd;">Overhead allocation</td><td style="padding: 8px; border: 1px solid #ddd;">5,000.00</td><td style="padding: 8px; border: 1px solid #ddd;">0.62</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #ddd;">Water Usage</td><td style="padding: 8px; border: 1px solid #ddd;">Utility charge</td><td style="padding: 8px; border: 1px solid #ddd;">1,000.00</td><td style="padding: 8px; border: 1px solid #ddd;">0.12</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #ddd;">LP Gas Usage</td><td style="padding: 8px; border: 1px solid #ddd;">Gas cylinder allocation</td><td style="padding: 8px; border: 1px solid #ddd;">800.00</td><td style="padding: 8px; border: 1px solid #ddd;">0.10</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #ddd;">Fuel & Transport</td><td style="padding: 8px; border: 1px solid #ddd;">Dispatch expenses</td><td style="padding: 8px; border: 1px solid #ddd;">5,000.00</td><td style="padding: 8px; border: 1px solid #ddd;">0.62</td></tr>
+        <tr><td style="padding: 8px; border: 1px solid #ddd;">Safety & Hygiene (Gloves, Masks)</td><td style="padding: 8px; border: 1px solid #ddd;">Consumables</td><td style="padding: 8px; border: 1px solid #ddd;">16,000.00</td><td style="padding: 8px; border: 1px solid #ddd;">2.00</td></tr>
+        <tr style="font-weight: bold;"><td style="padding: 8px; border: 1px solid #ddd;">Total Operational Overheads</td><td style="padding: 8px; border: 1px solid #ddd;">Per Tablet</td><td style="padding: 8px; border: 1px solid #ddd;">27,800.00</td><td style="padding: 8px; border: 1px solid #ddd;">3.46</td></tr>
+    </table>
+</body>
+</html>"""
+
+    st.download_button(
+        label="🖨️ Download Unit Cost Analysis Report (.html for Printing)",
+        data=unit_analysis_html.encode('utf-8'),
+        file_name=f"Unit_Cost_Analysis_{datetime.now().strftime('%Y%m%d')}.html",
+        mime="text/html"
+    )
+
+# --- SECTION 2: SWEDEN EXPORT ORDER COST REPORT ---
+elif menu_selection == "📦 Sweden Export Order Cost Report":
+    st.header("Case Study: Sweden Export Order Cost Report (QTY: 650 Tablets)")
+    st.markdown("ස්වීඩන් අපනයන ඇණවුම සඳහා අමුද්‍රව්‍ය පිරිවැය, ශ්‍රම පිරිවැය, පොදු වියදම් සහ ශුද්ධ ලාභය දැක්වෙන නිල වාර්තාව.")
+
+    sweden_rm_data = [
+        {"#": 1, "Raw Material / Cost Component": "Light Roasted Coffee", "Quantity / Weight": "500 g", "Total Cost (LKR)": "8,500.00", "Cost per Tablet (LKR)": "13.08"},
+        {"#": 2, "Raw Material / Cost Component": "Dark Roasted Coffee", "Quantity / Weight": "500 g", "Total Cost (LKR)": "7,500.00", "Cost per Tablet (LKR)": "11.54"},
+        {"#": 3, "Raw Material / Cost Component": "Ginger Coffee", "Quantity / Weight": "300 g", "Total Cost (LKR)": "1,000.00", "Cost per Tablet (LKR)": "1.54"},
+        {"#": 4, "Raw Material / Cost Component": "Cinnamon Powder", "Quantity / Weight": "100 g", "Total Cost (LKR)": "1,800.00", "Cost per Tablet (LKR)": "2.77"},
+        {"#": 5, "Raw Material / Cost Component": "Sugar", "Quantity / Weight": "200 g", "Total Cost (LKR)": "44.00", "Cost per Tablet (LKR)": "0.07"},
+        {"#": "A", "Raw Material / Cost Component": "Total Raw Material Cost", "Quantity / Weight": "-", "Total Cost (LKR)": "18,844.00", "Cost per Tablet (LKR)": "28.99"},
+        {"#": "B", "Raw Material / Cost Component": "Direct Labor Cost (650 x LKR 9.50)", "Quantity / Weight": "-", "Total Cost (LKR)": "6,175.00", "Cost per Tablet (LKR)": "9.50"},
+        {"#": "C", "Raw Material / Cost Component": "Operational Overhead & Utilities (650 x LKR 3.46)", "Quantity / Weight": "-", "Total Cost (LKR)": "2,249.00", "Cost per Tablet (LKR)": "3.46"},
+        {"#": "-", "Raw Material / Cost Component": "Total Manufacturing Cost (650 Tablets)", "Quantity / Weight": "-", "Total Cost (LKR)": "LKR 27,268.00", "Cost per Tablet (LKR)": "LKR 41.95"},
+        {"#": "D", "Raw Material / Cost Component": "Courier, Packaging Box & Wrapping Charges", "Quantity / Weight": "-", "Total Cost (LKR)": "2,632.50", "Cost per Tablet (LKR)": "4.05"},
+        {"#": "-", "Raw Material / Cost Component": "TOTAL LANDED COST (Manufacturing + Delivery)", "Quantity / Weight": "-", "Total Cost (LKR)": "LKR 29,900.00", "Cost per Tablet (LKR)": "LKR 46.00"}
+    ]
+    st.table(pd.DataFrame(sweden_rm_data))
+
+    st.success("""
+    ### 🇸🇪 SWEDEN ORDER FINANCIAL SUMMARY (650 TABLETS)
+    - **Total Revenue (650 Tablets @ LKR 50.00/ea):** LKR 32,500.00
+    - **Total Cost (650 Tablets @ LKR 46.00/ea):** LKR 29,900.00
+    
+    ### 💰 NET PROFIT: LKR 2,600.00
+    *(Margin: 8.00% / LKR 4.00 per tablet)*
+    """)
+
+    sweden_html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Sweden Export Order Cost Report</title></head>
+<body style="font-family: Arial, sans-serif; padding: 30px; color: #333;">
+    <h2 style="color: #5a3825; text-align: center;">CEYLON COFFEE TABLETS (PVT) LTD</h2>
+    <h3 style="text-align: center; color: #666;">Case Study: Sweden Export Order Cost Report (QTY: 650 Tablets)</h3>
+    <hr style="border: 1px solid #5a3825;">
+    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <tr style="background-color: #5a3825; color: white;">
+            <th style="padding: 8px; border: 1px solid #ddd;">#</th>
+            <th style="padding: 8px; border: 1px solid #ddd;">Raw Material / Cost Component</th>
+            <th style="padding: 8px; border: 1px solid #ddd;">Quantity / Weight</th>
+            <th style="padding: 8px; border: 1px solid #ddd;">Total Cost (LKR)</th>
+            <th style="padding: 8px; border: 1px solid #ddd;">Cost per Tablet (LKR)</th>
+        </tr>
+        <tr><td style="padding: 6px; border: 1px solid #ddd;">1</td><td style="padding: 6px; border: 1px solid #ddd;">Light Roasted Coffee</td><td style="padding: 6px; border: 1px solid #ddd;">500 g</td><td style="padding: 6px; border: 1px solid #ddd;">8,500.00</td><td style="padding: 6px; border: 1px solid #ddd;">13.08</td></tr>
+        <tr><td style="padding: 6px; border: 1px solid #ddd;">2</td><td style="padding: 6px; border: 1px solid #ddd;">Dark Roasted Coffee</td><td style="padding: 6px; border: 1px solid #ddd;">500 g</td><td style="padding: 6px; border: 1px solid #ddd;">7,500.00</td><td style="padding: 6px; border: 1px solid #ddd;">11.54</td></tr>
+        <tr><td style="padding: 6px; border: 1px solid #ddd;">3</td><td style="padding: 6px; border: 1px solid #ddd;">Ginger Coffee</td><td style="padding: 6px; border: 1px solid #ddd;">300 g</td><td style="padding: 6px; border: 1px solid #ddd;">1,000.00</td><td style="padding: 6px; border: 1px solid #ddd;">1.54</td></tr>
+        <tr><td style="padding: 6px; border: 1px solid #ddd;">4</td><td style="padding: 6px; border: 1px solid #ddd;">Cinnamon Powder</td><td style="padding: 6px; border: 1px solid #ddd;">100 g</td><td style="padding: 6px; border: 1px solid #ddd;">1,800.00</td><td style="padding: 6px; border: 1px solid #ddd;">2.77</td></tr>
+        <tr><td style="padding: 6px; border: 1px solid #ddd;">5</td><td style="padding: 6px; border: 1px solid #ddd;">Sugar</td><td style="padding: 6px; border: 1px solid #ddd;">200 g</td><td style="padding: 6px; border: 1px solid #ddd;">44.00</td><td style="padding: 6px; border: 1px solid #ddd;">0.07</td></tr>
+        <tr style="font-weight: bold; background-color: #f7f7f7;"><td style="padding: 6px; border: 1px solid #ddd;">A</td><td style="padding: 6px; border: 1px solid #ddd;">Total Raw Material Cost</td><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">18,844.00</td><td style="padding: 6px; border: 1px solid #ddd;">28.99</td></tr>
+        <tr><td style="padding: 6px; border: 1px solid #ddd;">B</td><td style="padding: 6px; border: 1px solid #ddd;">Direct Labor Cost (650 x LKR 9.50)</td><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">6,175.00</td><td style="padding: 6px; border: 1px solid #ddd;">9.50</td></tr>
+        <tr><td style="padding: 6px; border: 1px solid #ddd;">C</td><td style="padding: 6px; border: 1px solid #ddd;">Operational Overhead & Utilities (650 x LKR 3.46)</td><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">2,249.00</td><td style="padding: 6px; border: 1px solid #ddd;">3.46</td></tr>
+        <tr style="font-weight: bold; background-color: #eaf2f8;"><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">Total Manufacturing Cost (650 Tablets)</td><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">LKR 27,268.00</td><td style="padding: 6px; border: 1px solid #ddd;">LKR 41.95</td></tr>
+        <tr><td style="padding: 6px; border: 1px solid #ddd;">D</td><td style="padding: 6px; border: 1px solid #ddd;">Courier, Packaging Box & Wrapping Charges</td><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">2,632.50</td><td style="padding: 6px; border: 1px solid #ddd;">4.05</td></tr>
+        <tr style="font-weight: bold; background-color: #d4efdf;"><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">TOTAL LANDED COST (Manufacturing + Delivery)</td><td style="padding: 6px; border: 1px solid #ddd;">-</td><td style="padding: 6px; border: 1px solid #ddd;">LKR 29,900.00</td><td style="padding: 6px; border: 1px solid #ddd;">LKR 46.00</td></tr>
+    </table>
+    <div style="margin-top: 20px; background-color: #27ae60; color: white; padding: 15px; border-radius: 5px;">
+        <h3 style="margin: 0 0 10px 0;">SWEDEN ORDER FINANCIAL SUMMARY (650 TABLETS)</h3>
+        <p style="margin: 3px 0;">• Total Revenue (650 Tablets @ LKR 50.00/ea): LKR 32,500.00</p>
+        <p style="margin: 3px 0;">• Total Cost (650 Tablets @ LKR 46.00/ea): LKR 29,900.00</p>
+        <h2 style="margin: 10px 0 0 0; text-align: right;">NET PROFIT: LKR 2,600.00</h2>
+        <p style="margin: 2px 0 0 0; font-size: 11px; text-align: right;">(Margin: 8.00% / LKR 4.00 per tablet)</p>
+    </div>
+</body>
+</html>"""
+
+    st.download_button(
+        label="🖨️ Download Sweden Export Order Report (.html for Printing)",
+        data=sweden_html.encode('utf-8'),
+        file_name=f"Sweden_Export_Cost_Report_{datetime.now().strftime('%Y%m%d')}.html",
+        mime="text/html"
+    )
+
+# --- SECTION 3: EXPENSES REPORT ---
 elif menu_selection == "💸 Expenses Report":
     st.header("Expenses Report & Operational Cost Tracking")
-    st.markdown("අධ්‍යක්ෂවරුන් විසින් දරනු ලබන වියදම් (රෝ මැටීරියල්ස්, Gloves, Masks, Sugar සහ අනෙකුත් උපකරණ මිලදී ගැනීම්) මෙහි ඇතුළත් කර වාර්තා කරගත හැක.")
-
     with st.form("expenses_form"):
         e1, e2 = st.columns(2)
         with e1:
             exp_date = st.date_input("Expense Date", value=datetime.now().date())
-            expense_category = st.selectbox("Expense Category", [
-                "Raw Materials - Coffee Beans (Arabica)",
-                "Raw Materials - Ginger Extract",
-                "Raw Materials - Cinnamon Extract",
-                "Safety Gear - Gloves",
-                "Safety Gear - Masks",
-                "Ingredients - Sugar / Sweetener",
-                "Packaging Foils & Bottles",
-                "Equipment & Machinery",
-                "Other / Miscellaneous Expenses"
-            ])
-            custom_item_name = st.text_input("Custom Item / Description (අවශ්‍ය නම් වෙනත් අයිතමයක් නම් කරන්න)")
+            expense_category = st.selectbox("Expense Category", ["Raw Materials", "Safety Gear (Gloves/Masks)", "Ingredients (Sugar)", "Packaging", "Equipment", "Other"])
+            custom_item_name = st.text_input("Custom Item Description")
         with e2:
-            funded_by = st.selectbox("Funded / Paid By (Director Name)", list(USERS.keys()))
-            amount_lkr = st.number_input("Total Expense Amount (LKR)", value=5000.0, step=100.0)
-            receipt_ref = st.text_input("Receipt / Invoice Reference No")
+            funded_by = st.selectbox("Funded By", list(USERS.keys()))
+            amount_lkr = st.number_input("Total Amount (LKR)", value=5000.0, step=100.0)
+            receipt_ref = st.text_input("Reference No")
 
-        submit_exp = st.form_submit_button("Save Expense Record")
-        if submit_exp:
-            item_desc = custom_item_name if custom_item_name else expense_category
+        if st.form_submit_button("Save Expense Record"):
             st.session_state.expenses_logs.append({
                 "Date": str(exp_date),
                 "Category": expense_category,
-                "Item Description": item_desc,
+                "Item": custom_item_name if custom_item_name else expense_category,
                 "Funded By": funded_by,
                 "Amount (LKR)": amount_lkr,
                 "Reference": receipt_ref
             })
-            st.success(f"Expense of LKR {amount_lkr:,.2f} for '{item_desc}' funded by {funded_by} saved successfully!")
+            st.success("Expense recorded successfully!")
 
     if st.session_state.expenses_logs:
         st.subheader("Recorded Expenses Ledger")
-        total_exp_sum = sum([item["Amount (LKR)"] for item in st.session_state.expenses_logs])
-        st.metric("Total Accumulated Expenses", f"LKR {total_exp_sum:,.2f}")
-        
         for idx, exp in enumerate(st.session_state.expenses_logs):
             c1, c2 = st.columns([5, 1])
             with c1:
-                st.write(f"📅 {exp['Date']} | **{exp['Item Description']}** | Paid by: `{exp['Funded By']}` | **LKR {exp['Amount (LKR)']:,.2f}** (Ref: {exp['Reference']})")
+                st.write(f"📅 {exp['Date']} | **{exp['Item']}** | Paid by: `{exp['Funded By']}` | **LKR {exp['Amount (LKR)']:,.2f}**")
             with c2:
                 if st.button("Delete", key=f"del_exp_{idx}"):
                     st.session_state.expenses_logs.pop(idx)
                     st.rerun()
 
-        exp_df = pd.DataFrame(st.session_state.expenses_logs)
-        st.download_button("🖨️ Download Expenses Report (CSV)", exp_df.to_csv(index=False).encode('utf-8'), "expenses_report.csv", "text/csv")
-    else:
-        st.info("No expense records found yet.")
-
-# --- SECTION 3: FINANCIAL P&L & PROFIT SHARING ---
+# --- SECTION 4: FINANCIAL P&L & PROFIT SHARING ---
 elif menu_selection == "📈 Financial P&L & Profit Sharing":
     st.header("Financial P&L, Reinvestment & Directors Profit Sharing (5 Directors)")
-    st.markdown("සමාගමේ සමස්ත ආදායම, වියදම් සහ ශුද්ධ ලාභය ගණනය කර, ඉන් ප්‍රතිශතයක් සමාගම ඉදිරියට ගෙනයාමට නැවත ආයෝජනය (Reinvestment) කර, ඉතිරිය අධ්‍යක්ෂවරුන් 5 දෙනා අතර බෙදී යන ආකාරය මෙහි දැක්වේ.")
-
     total_revenue = sum([order["Grand Total (LKR)"] for order in st.session_state.orders])
     total_expenses = sum([item["Amount (LKR)"] for item in st.session_state.expenses_logs])
     net_profit = total_revenue - total_expenses
 
     col_m1, col_m2, col_m3 = st.columns(3)
-    col_m1.metric("Total Revenue (IN)", f"LKR {total_revenue:,.2f}")
-    col_m2.metric("Total Expenses (OUT)", f"LKR {total_expenses:,.2f}")
-    col_m3.metric("Net Profit / Loss", f"LKR {net_profit:,.2f}")
+    col_m1.metric("Total Revenue", f"LKR {total_revenue:,.2f}")
+    col_m2.metric("Total Expenses", f"LKR {total_expenses:,.2f}")
+    col_m3.metric("Net Profit", f"LKR {net_profit:,.2f}")
 
-    st.markdown("---")
-    st.subheader("Profit Allocation & Reinvestment Settings")
-    
-    col_s1, col_s2 = st.columns(2)
-    with col_s1:
-        reinvest_percentage = st.slider("Company Reinvestment Percentage (%) [සමාගම වෙනුවෙන් රඳවා ගන්නා ප්‍රතිශතය]", 0, 100, 40)
-    with col_s2:
-        directors_share_pct = 100 - reinvest_percentage
-        st.info(f"**Directors Total Share Percentage:** {directors_share_pct}% (Divided equally among 5 Directors)")
-
+    reinvest_percentage = st.slider("Company Reinvestment Percentage (%)", 0, 100, 40)
+    directors_share_pct = 100 - reinvest_percentage
     reinvest_amount = (net_profit * reinvest_percentage) / 100 if net_profit > 0 else 0
     directors_total_pool = (net_profit * directors_share_pct) / 100 if net_profit > 0 else 0
     per_director_share = directors_total_pool / 5.0 if net_profit > 0 else 0
 
-    st.markdown("---")
-    st.subheader("Profit Distribution Summary (5 Directors)")
-    
-    p1, p2 = st.columns(2)
-    with p1:
-        st.success(f"🏢 **Reinvested into Company Growth:** LKR {reinvest_amount:,.2f} ({reinvest_percentage}%)")
-    with p2:
-        st.warning(f"👥 **Total Directors Pool:** LKR {directors_total_pool:,.2f} ({directors_share_pct}%)")
+    st.success(f"🏢 **Reinvested in Company:** LKR {reinvest_amount:,.2f} ({reinvest_percentage}%)")
+    st.warning(f"👥 **Directors Total Pool (5 Directors):** LKR {directors_total_pool:,.2f} ({directors_share_pct}%) -> LKR {per_director_share:,.2f} each")
 
-    st.markdown("### Directors Share Breakdown (5 Directors)")
-    directors_list = ["Krishan Damith", "Shehan Maduranga", "Kanishka Dulanjana", "Chanuka Vinod", "Pasindu Sachintha"]
-    
-    dir_rows = []
-    for d in directors_list:
-        dir_rows.append({
-            "Director Name": d,
-            "Share Percentage": f"{directors_share_pct / 5.0:.1f}%",
-            "Allocated Amount (LKR)": f"LKR {per_director_share:,.2f}"
-        })
-    
-    dir_df = pd.DataFrame(dir_rows)
-    st.table(dir_df)
-
-    pnl_html = f"""<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Financial P&L and Profit Sharing Report</title></head>
-<body style="font-family: Arial, sans-serif; padding: 30px; color: #333;">
-    <h2 style="color: #5a3825; text-align: center;">CEYLON COFFEE TABLETS (PVT) LTD</h2>
-    <h3 style="text-align: center; color: #666;">Financial Profit & Loss and Directors Profit Sharing Report</h3>
-    <hr style="border: 1px solid #5a3825;">
-    <p><b>Total Revenue:</b> LKR {total_revenue:,.2f}</p>
-    <p><b>Total Expenses:</b> LKR {total_expenses:,.2f}</p>
-    <p><b>Net Profit:</b> LKR {net_profit:,.2f}</p>
-    <p><b>Reinvested in Company ({reinvest_percentage}%):</b> LKR {reinvest_amount:,.2f}</p>
-    <p><b>Directors Total Pool ({directors_share_pct}%):</b> LKR {directors_total_pool:,.2f}</p>
-    <p><b>Per Director Share (5 Directors):</b> LKR {per_director_share:,.2f} each</p>
-    <br><p style="font-size: 12px; color: #777; text-align: center;">Generated via Ceylon Coffee Tablets Enterprise Portal</p>
-</body>
-</html>"""
-
-    st.download_button(
-        label="🖨️ Download P&L & Profit Sharing Report (.html for Printing)",
-        data=pnl_html.encode('utf-8'),
-        file_name=f"Financial_PNL_Report_{datetime.now().strftime('%Y%m%d')}.html",
-        mime="text/html"
-    )
-
-# --- SECTION 4: BATCH PRODUCTION RECORD (BPR MASTER) ---
+# --- SECTION 5: BATCH PRODUCTION RECORD (BPR MASTER) ---
 elif menu_selection == "🏭 Batch Production (BPR)":
     st.header("Batch Production Record (BPR) Master System")
     with st.form("bpr_form"):
-        st.subheader("1. Batch Identification & Metadata (Auto Generated)")
-        b1, b2, b3 = st.columns(3)
-        with b1:
-            bpr_mfg = st.date_input("Manufacture Date", value=datetime.now().date())
-            auto_batch_no = f"CCT{bpr_mfg.strftime('%y%m%d')}"
-            st.text_input("Auto Batch Number", value=auto_batch_no, disabled=True)
-        with b2:
-            auto_exp = bpr_mfg + timedelta(days=240)
-            st.text_input("Auto Expiry Date (+8 Months)", value=str(auto_exp), disabled=True)
-            bpr_variant = st.selectbox("Product Variant", ["Black Coffee (Light Roast)", "Black Coffee (Dark Roast)", "Cinnamon Coffee", "Ginger Coffee"])
-        with b3:
-            bpr_target_qty = st.number_input("Target Tablets Quantity Produced", value=150)
-            bpr_operator = st.text_input("Operator / Technician Name")
-
-        bpr_submit = st.form_submit_button("Save Batch & Update Stock")
-        if bpr_submit:
-            st.session_state.bpr_logs.append({
-                "Batch No": auto_batch_no,
-                "Variant": bpr_variant,
-                "Mfg Date": str(bpr_mfg),
-                "Expiry Date": str(auto_exp),
-                "Tablets Produced": bpr_target_qty,
-                "Operator": bpr_operator
-            })
-            if bpr_variant in st.session_state.tablet_stock:
-                st.session_state.tablet_stock[bpr_variant] += bpr_target_qty
-            st.success(f"Batch {auto_batch_no} saved successfully!")
-
+        bpr_mfg = st.date_input("Manufacture Date", value=datetime.now().date())
+        auto_batch_no = f"CCT{bpr_mfg.strftime('%y%m%d')}"
+        bpr_variant = st.selectbox("Product Variant", list(st.session_state.tablet_stock.keys()))
+        bpr_target_qty = st.number_input("Tablets Quantity Produced", value=150)
+        if st.form_submit_button("Save Batch"):
+            st.session_state.bpr_logs.append({"Batch No": auto_batch_no, "Variant": bpr_variant, "Qty": bpr_target_qty})
+            st.session_state.tablet_stock[bpr_variant] += bpr_target_qty
+            st.success("Batch saved and stock updated!")
     if st.session_state.bpr_logs:
-        st.subheader("Saved Batch Production Records")
-        for idx, log in enumerate(st.session_state.bpr_logs):
-            c1, c2 = st.columns([5, 1])
-            with c1:
-                st.write(f"**{log['Batch No']}** | {log['Variant']} | Qty: {log['Tablets Produced']}")
-            with c2:
-                if st.button("Delete", key=f"del_bpr_{idx}"):
-                    st.session_state.bpr_logs.pop(idx)
-                    st.rerun()
+        st.table(pd.DataFrame(st.session_state.bpr_logs))
 
-# --- SECTION 5: STORES & STOCK ---
+# --- SECTION 6: STORES & STOCK ---
 elif menu_selection == "📦 Stores & Stock":
-    st.header("Stores & Stock Management (Raw Materials & Tablets)")
+    st.header("Stores & Stock Management")
     col_st1, col_st2 = st.columns(2)
     with col_st1:
-        st.subheader("📦 Raw Materials Stock Balance")
-        rm_stock_df = pd.DataFrame(list(st.session_state.raw_stock.items()), columns=["Raw Material Item", "Available Quantity"])
-        st.table(rm_stock_df)
+        st.table(pd.DataFrame(list(st.session_state.raw_stock.items()), columns=["Raw Material", "Quantity"]))
     with col_st2:
-        st.subheader("💊 Finished Tablets Stock Balance")
-        tab_stock_df = pd.DataFrame(list(st.session_state.tablet_stock.items()), columns=["Tablet Variant", "Available Quantity"])
-        st.table(tab_stock_df)
+        st.table(pd.DataFrame(list(st.session_state.tablet_stock.items()), columns=["Variant", "Quantity"]))
 
-# --- SECTION 6: LAB & R&D REPORTS ---
+# --- SECTION 7: LAB & R&D REPORTS ---
 elif menu_selection == "🧪 Lab & R&D Reports":
-    st.header("Lab & R&D Quality Control Reports (PDF Scanner & Management)")
-    uploaded_lab_file = st.file_uploader("Upload Lab Report (PDF / PNG / JPG)", type=["png", "jpg", "jpeg", "pdf"], key="lab_file_uploader")
-
-    default_batch = "RND-TR-2025-013"
-    default_date = datetime.strptime("2025-11-25", "%Y-%m-%d").date()
-
+    st.header("Lab & R&D Quality Control Reports")
     with st.form("rd_form"):
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            batch_no = st.text_input("Test Report Ref / Batch No", value=default_batch)
-            variant = st.selectbox("Product Variant", ["Black Coffee (Light Roast)", "Black Coffee (Dark Roast)", "Cinnamon Coffee", "Ginger Coffee"])
-        with col2:
-            mfg_date = st.date_input("Test Date", value=default_date)
-            coffee_wt = st.number_input("Coffee Weight / Base (g)", value=10.0)
-        with col3:
-            moisture = st.number_input("Moisture / Thermal Level", value=100.0, step=1.0)
-            qc_status = st.selectbox("Batch Status", ["Completed / Verified", "APPROVED FOR RELEASE", "REJECTED / HOLD"])
-
-        submitted_rd = st.form_submit_button("Save R&D Report")
-        if submitted_rd:
-            file_name = uploaded_lab_file.name if uploaded_lab_file is not None else "RND-TR-2025-013.pdf"
-            st.session_state.rd_logs.append({
-                "Batch No": batch_no,
-                "Variant": variant,
-                "Date": str(mfg_date),
-                "Status": qc_status,
-                "Attached File": file_name
-            })
-            st.success(f"✅ Lab Report '{batch_no}' saved successfully!")
-
+        batch_no = st.text_input("Test Report Ref", value="RND-TR-2025-013")
+        if st.form_submit_button("Save Report"):
+            st.session_state.rd_logs.append({"Batch No": batch_no})
+            st.success("Saved!")
     if st.session_state.rd_logs:
-        st.subheader("Saved Lab & R&D Logs")
-        for idx, log in enumerate(st.session_state.rd_logs):
-            c1, c2 = st.columns([5, 1])
-            with c1:
-                st.write(f"**{log['Batch No']}** | {log['Variant']} | Date: {log['Date']} | Status: {log['Status']}")
-            with c2:
-                if st.button("Delete", key=f"del_rd_{idx}"):
-                    st.session_state.rd_logs.pop(idx)
-                    st.rerun()
+        st.table(pd.DataFrame(st.session_state.rd_logs))
 
-# --- SECTION 7: DEALERS DIRECTORY ---
+# --- SECTION 8: DEALERS DIRECTORY ---
 elif menu_selection == "🤝 Dealers Directory":
-    st.header("Local & Foreign Dealers Directory")
+    st.header("Dealers Directory")
     if st.session_state.user_role == "Admin":
         with st.form("dealer_form"):
-            dealer_name = st.text_input("Dealer / Business Name")
-            country = st.text_input("Country & City (e.g., Sweden, Kalmar)")
-            save_dealer = st.form_submit_button("Save Dealer Record")
-            if save_dealer and dealer_name:
-                st.session_state.dealers_logs.append({"Dealer Name": dealer_name, "Country": country})
-                st.success("Dealer saved successfully!")
-        if st.session_state.dealers_logs:
-            for idx, d in enumerate(st.session_state.dealers_logs):
-                c1, c2 = st.columns([5, 1])
-                with c1:
-                    st.write(f"**{d['Dealer Name']}** ({d['Country']})")
-                with c2:
-                    if st.button("Delete", key=f"del_dlr_{idx}"):
-                        st.session_state.dealers_logs.pop(idx)
-                        st.rerun()
+            d_name = st.text_input("Dealer Name")
+            if st.form_submit_button("Save"):
+                st.session_state.dealers_logs.append({"Dealer Name": d_name})
+                st.success("Saved!")
     else:
-        st.error("🔒 Admin access required.")
+        st.error("Admin only.")
 
-# --- SECTION 8: LETTERS & MEMOS ---
+# --- SECTION 9: LETTERS & MEMOS ---
 elif menu_selection == "✉️ Letters & Memos":
-    st.header("Official Letters & Memos")
+    st.header("Letters & Memos")
     with st.form("letter_form"):
-        subject_title = st.text_input("Subject / Title")
-        submitted_letter = st.form_submit_button("Save Document")
-        if submitted_letter and subject_title:
-            st.session_state.letters_logs.append({"Subject": subject_title})
-            st.success("Document saved!")
-    if st.session_state.letters_logs:
-        for idx, l in enumerate(st.session_state.letters_logs):
-            c1, c2 = st.columns([5, 1])
-            with c1:
-                st.write(f"**{l['Subject']}**")
-            with c2:
-                if st.button("Delete", key=f"del_let_{idx}"):
-                    st.session_state.letters_logs.pop(idx)
-                    st.rerun()
+        subj = st.text_input("Subject")
+        if st.form_submit_button("Save"):
+            st.session_state.letters_logs.append({"Subject": subj})
+            st.success("Saved!")
 
-# --- SECTION 9: INVOICE GENERATOR ---
+# --- SECTION 10: INVOICE GENERATOR ---
 elif menu_selection == "📄 Invoice Generator":
-    st.header("Official Invoice Generator")
-    inv_no = st.text_input("Invoice Number", value="CCT-00012")
-    cust_name = st.text_input("Customer Name")
-    with st.form("add_cart_form"):
-        c_var = st.selectbox("Coffee Variant", list(st.session_state.tablet_stock.keys()))
-        c_qty = st.number_input("Quantity", min_value=1, value=10)
-        if st.form_submit_button("Add to Cart"):
-            st.session_state.invoice_cart.append({"Variant": c_var, "Qty": c_qty, "Total": c_qty * st.session_state.retail_price})
-            st.success("Added to cart!")
+    st.header("Invoice Generator")
+    inv_no = st.text_input("Invoice No", value="CCT-00012")
+    cust = st.text_input("Customer Name")
+    with st.form("cart"):
+        var = st.selectbox("Variant", list(st.session_state.tablet_stock.keys()))
+        qty = st.number_input("Qty", value=10)
+        if st.form_submit_button("Add"):
+            st.session_state.invoice_cart.append({"Variant": var, "Qty": qty, "Total": qty * st.session_state.retail_price})
+            st.success("Added!")
     if st.session_state.invoice_cart:
         st.table(pd.DataFrame(st.session_state.invoice_cart))
-        if st.button("Generate & Save Invoice"):
-            st.session_state.orders.append({
-                "Invoice No": inv_no,
-                "Customer": cust_name,
-                "Total Tablets": sum([i['Qty'] for i in st.session_state.invoice_cart]),
-                "Grand Total (LKR)": sum([i['Total'] for i in st.session_state.invoice_cart])
-            })
-            st.success("Invoice generated and saved!")
+        if st.button("Generate Invoice"):
+            st.session_state.orders.append({"Invoice No": inv_no, "Customer": cust, "Grand Total (LKR)": sum([i['Total'] for i in st.session_state.invoice_cart])})
+            st.success("Generated!")
 
-# --- SECTION 10: DIRECTORS DASHBOARD ---
+# --- SECTION 11: DIRECTORS DASHBOARD ---
 elif menu_selection == "📋 Directors Dashboard":
-    st.header("Directors' Central Records & Master Dashboard")
-    report_category = st.selectbox("Select Category", [
-        "Expenses Report",
-        "Financial P&L & Profit Sharing",
-        "Batch Production Records (BPR)",
-        "Lab & R&D Reports", 
-        "Raw Materials (RM-LOG)", 
-        "Official Letters & Memos", 
-        "Invoices & Dispatched Orders"
-    ])
-    st.markdown("---")
-    if report_category == "Expenses Report":
-        if st.session_state.expenses_logs:
-            st.dataframe(pd.DataFrame(st.session_state.expenses_logs), use_container_width=True)
-        else:
-            st.info("No expenses found.")
-    elif report_category == "Financial P&L & Profit Sharing":
-        st.info("Check the 'Financial P&L & Profit Sharing' tab for complete breakdowns and printable reports.")
-    elif report_category == "Lab & R&D Reports":
-        if st.session_state.rd_logs:
-            st.dataframe(pd.DataFrame(st.session_state.rd_logs), use_container_width=True)
-        else:
-            st.info("No lab reports found.")
-    elif report_category == "Invoices & Dispatched Orders":
-        if st.session_state.orders:
-            st.dataframe(pd.DataFrame(st.session_state.orders), use_container_width=True)
-        else:
-            st.info("No orders found.")
+    st.header("Directors' Central Dashboard")
+    cat = st.selectbox("Category", ["Expenses Report", "Unit Cost Analysis", "Sweden Export Report", "Batch Production", "Lab Reports", "Invoices"])
+    if cat == "Expenses Report" and st.session_state.expenses_logs:
+        st.dataframe(pd.DataFrame(st.session_state.expenses_logs))
+    elif cat == "Unit Cost Analysis":
+        st.info("Check the 'Unit Cost & Profitability Analysis' tab for complete breakdowns and print view.")
+    elif cat == "Sweden Export Report":
+        st.info("Check the 'Sweden Export Order Cost Report' tab for the complete case study and print view.")
+    elif cat == "Invoices" and st.session_state.orders:
+        st.dataframe(pd.DataFrame(st.session_state.orders))
+    else:
+        st.info("No records found in this category.")
