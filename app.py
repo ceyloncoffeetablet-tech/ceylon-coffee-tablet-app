@@ -266,7 +266,7 @@ with tabs[1]:
         if st.session_state.user_role == "Admin":
             st.download_button("📥 Download BPR Logs (CSV)", bpr_df.to_csv(index=False).encode('utf-8'), "bpr_master_logs.csv", "text/csv")
 
-# --- TAB 3: STORES & STOCK (LINKED INVENTORY - EMPTY START) ---
+# --- TAB 3: STORES & STOCK (LINKED INVENTORY) ---
 with tabs[2]:
     st.header("Stores & Stock Management (Raw Materials & Tablets)")
     st.markdown("අමුද්‍රව්‍ය ස්ටොක් සහ නිම කළ ටැබ්ලට් ස්ටොක් ශේෂයන් මෙහි දැක්වේ.")
@@ -309,7 +309,7 @@ with tabs[2]:
             })
             st.success(f"Added {r_qty} of {r_item} to stores successfully!")
 
-# --- TAB 4: LAB & R&D REPORTS ---
+# --- TAB 4: LAB & R&D REPORTS (WITH FILE UPLOADER) ---
 with tabs[3]:
     st.header("Lab & R&D Quality Control Reports")
     with st.form("rd_form"):
@@ -324,11 +324,11 @@ with tabs[3]:
             moisture = st.number_input("Moisture Level (%) [Standard < 4.0%]", value=3.5, step=0.1)
             qc_status = st.selectbox("Batch Status", ["APPROVED FOR RELEASE", "REJECTED / HOLD"])
 
-        uploaded_photo = st.file_uploader("Attach Lab Test / Report PDF or Photo", type=["png", "jpg", "jpeg", "pdf"])
+        uploaded_lab_file = st.file_uploader("Upload Existing Lab Report (PDF / Image)", type=["png", "jpg", "jpeg", "pdf"])
 
         submitted_rd = st.form_submit_button("Save R&D Report")
         if submitted_rd and batch_no:
-            file_name = uploaded_photo.name if uploaded_photo else "No File"
+            file_name = uploaded_lab_file.name if uploaded_lab_file else "No File Attached"
             st.session_state.rd_logs.append({
                 "Batch No": batch_no,
                 "Variant": variant,
@@ -339,10 +339,10 @@ with tabs[3]:
                 "Attached File": file_name,
                 "Recorded By": st.session_state.current_user
             })
-            st.success("R&D Report Saved Successfully!")
+            st.success("Lab & R&D Report Uploaded and Saved Successfully!")
 
     if st.session_state.rd_logs:
-        st.subheader("Saved R&D Logs")
+        st.subheader("Saved Lab & R&D Logs")
         rd_df = pd.DataFrame(st.session_state.rd_logs)
         st.table(rd_df)
         if st.session_state.user_role == "Admin":
@@ -393,7 +393,7 @@ with tabs[4]:
     else:
         st.error("🔒 රහස්‍යභාවය සුරක්ෂිත කිරීම සඳහා ඩීලර්ස් නාමාවලිය බැලීමේ සහ ඇතුළත් කිරීමේ පූර්ණ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
-# --- TAB 6: OFFICIAL LETTERS & MEMOS ---
+# --- TAB 6: OFFICIAL LETTERS & MEMOS (WITH FILE UPLOADER) ---
 with tabs[5]:
     st.header("Official Letters, Inbound/Outbound Memos & Documents")
     with st.form("letter_form"):
@@ -404,13 +404,13 @@ with tabs[5]:
             sender_receiver = st.text_input("Sender / Recipient Name (අදාළ පාර්ශ්වය)")
         with col_l2:
             doc_date = st.date_input("Document Date")
-            uploaded_doc = st.file_uploader("Upload Letter Document (PDF / Image)", type=["png", "jpg", "jpeg", "pdf"])
+            uploaded_doc = st.file_uploader("Upload Existing Letter/Document (PDF / Image)", type=["png", "jpg", "jpeg", "pdf"])
             
         doc_notes = st.text_area("Key Notes / Summary (සටහන්)")
         
         submitted_letter = st.form_submit_button("Save Official Document")
         if submitted_letter and subject_title:
-            file_name = uploaded_doc.name if uploaded_doc else "No File"
+            file_name = uploaded_doc.name if uploaded_doc else "No File Attached"
             st.session_state.letters_logs.append({
                 "Type": doc_type,
                 "Subject": subject_title,
@@ -420,7 +420,7 @@ with tabs[5]:
                 "File": file_name,
                 "Managed By": st.session_state.current_user
             })
-            st.success("Official Letter/Memo Saved Successfully!")
+            st.success("Official Letter/Memo Uploaded and Saved Successfully!")
 
     if st.session_state.letters_logs:
         st.subheader("Registered Letters & Memos History")
