@@ -122,7 +122,7 @@ if st.sidebar.button("Logout"):
     st.session_state.user_role = ""
     st.rerun()
 
-# --- SECTION 0: WELCOME & OVERVIEW (HOME PAGE) ---
+# --- SECTION 0: WELCOME & OVERVIEW ---
 if menu_selection == "🏠 Welcome & Overview":
     st.title("Ceylon Coffee Tablets (Pvt) Ltd")
     st.markdown("### *Drop it. Dissolve it. Done. | Premium Sri Lankan Specialty Coffee Innovation*")
@@ -141,7 +141,7 @@ if menu_selection == "🏠 Welcome & Overview":
         📌 **පද්ධතියේ ප්‍රධාන විශේෂාංග:**
         - **ස්වයංක්‍රීය බැච් සහ කල් ඉකුත්වීමේ දිනය:** නිෂ්පාදන දිනය අනුව බැච් අංකය සහ මාස 8ක කල් ඉකුත්වීමේ දිනය ස්වයංක්‍රීයව හැදීම.
         - **ස්ටොක් කළමනාකරණය (Stores & Stock):** අමුද්‍රව්‍ය මිලදී ගැනීම්, නිෂ්පාදනයට අමුද්‍රව්‍ය අඩුවීම සහ ඉන්වොයිසි හරහා ටැබ්ලට් අලෙවි වූ විට ස්ටොක් එක ස්වයංක්‍රීයව යාවත්කාලීන වීම.
-        - **ආරක්ෂිත කළමනාකරණය:** අධ්‍යක්ෂක මණ්ඩලයට සහ ඇඩ්මින්වරයාට පමණක් වෙන් වූ ආරක්ෂිත ප්‍රවේශය.
+        - **ඩිරෙක්ටර්ස් ඩෑෂ්බෝඩ් (Directors Dashboard):** ඕනෑම දිනයක් හෝ වාර්තා වර්ගයක් ෆිල්ටර් කර, ප්‍රින්ට් අවුට් සහ CSV ඩවුන්ලෝඩ් කරගත හැකි පහසුකම.
         
         👉 **කරුණාකර වම්පස ඇති මෙනුව (Sidebar Menu) භාවිතා කර ඔබට අවශ්‍ය අංශය වෙත පිවිසෙන්න.**
         """)
@@ -617,12 +617,13 @@ elif menu_selection == "📄 Invoice Generator":
             else:
                 st.info("🔒 ඩවුන්ලෝඩ් කරගැනීමේ අවසරය ඇත්තේ ඇඩ්මින් වෙත පමණි.")
 
-# --- SECTION 8: DIRECTORS DASHBOARD ---
+# --- SECTION 8: DIRECTORS DASHBOARD (CENTRAL FILTER & PRINT FOR MANUAL FILES) ---
 elif menu_selection == "📋 Directors Dashboard":
-    st.header("Directors' Filterable Records & Management Dashboard")
-    st.markdown("අධ්‍යක්ෂකවරුන්ට අවශ්‍ය වාර්තා වර්ගය තෝරා (Filter කර) නැරඹිය හැක.")
+    st.header("Directors' Central Records & Master Dashboard")
+    st.markdown("සියලුම අංශවල (Batch Production, Lab Reports, Raw Materials, Letters, Invoices) වාර්තා මෙහි එකතු වී ඇත. ඔබට අවශ්‍ය වාර්තා වර්ගය සහ දිනය (Date) තෝරා (Filter කර) **ප්‍රින්ට් අවුට් (Print) සඳහා ඩවුන්ලෝඩ්** කරගත හැක.")
 
-    report_category = st.selectbox("Select Report Category to View", [
+    # Select Report Category
+    report_category = st.selectbox("Select Master Record Category to View & Print", [
         "Batch Production Records (BPR)",
         "Lab & R&D Reports", 
         "Raw Materials (RM-LOG)", 
@@ -632,46 +633,105 @@ elif menu_selection == "📋 Directors Dashboard":
 
     st.markdown("---")
 
+    # 1. BPR LOGS
     if report_category == "Batch Production Records (BPR)":
-        st.subheader("🏭 Batch Production Records (BPR)")
+        st.subheader("🏭 Batch Production Records (BPR Master)")
         if st.session_state.bpr_logs:
             bpr_df = pd.DataFrame(st.session_state.bpr_logs)
-            st.table(bpr_df)
-            if st.session_state.user_role == "Admin":
-                st.download_button("📥 Download BPR Logs (CSV)", bpr_df.to_csv(index=False).encode('utf-8'), "bpr_logs.csv", "text/csv")
+            
+            # Date filter option
+            use_date_filter = st.checkbox("Filter by Manufacture Date")
+            if use_date_filter and "Mfg Date" in bpr_df.columns:
+                unique_dates = list(bpr_df["Mfg Date"].unique())
+                selected_date = st.selectbox("Select Date", unique_dates)
+                bpr_df = bpr_df[bpr_df["Mfg Date"] == selected_date]
+            
+            st.dataframe(bpr_df, use_container_width=True)
+            
+            # Print / Download for manual files
+            csv_data = bpr_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="🖨️ Download / Print BPR Report (CSV for Manual Files)",
+                data=csv_data,
+                file_name=f"BPR_Master_Report_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv"
+            )
         else:
             st.info("No Batch Production records found yet.")
 
+    # 2. LAB & R&D REPORTS
     elif report_category == "Lab & R&D Reports":
         st.subheader("🧪 Lab & R&D Quality Control Records")
         if st.session_state.rd_logs:
             rd_df = pd.DataFrame(st.session_state.rd_logs)
-            st.table(rd_df)
-            if st.session_state.user_role == "Admin":
-                st.download_button("📥 Download Lab Reports (CSV)", rd_df.to_csv(index=False).encode('utf-8'), "lab_reports.csv", "text/csv")
+            
+            use_date_filter = st.checkbox("Filter by Report Date")
+            if use_date_filter and "Date" in rd_df.columns:
+                unique_dates = list(rd_df["Date"].unique())
+                selected_date = st.selectbox("Select Date", unique_dates)
+                rd_df = rd_df[rd_df["Date"] == selected_date]
+            
+            st.dataframe(rd_df, use_container_width=True)
+            
+            csv_data = rd_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="🖨️ Download / Print Lab Reports (CSV for Manual Files)",
+                data=csv_data,
+                file_name=f"Lab_Reports_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv"
+            )
         else:
             st.info("No Lab & R&D records found yet.")
 
+    # 3. RAW MATERIALS
     elif report_category == "Raw Materials (RM-LOG)":
-        st.subheader("📦 Raw Materials Inventory & Sourcing Records")
+        st.subheader("📦 Raw Materials Sourcing & Purchase Logs")
         if st.session_state.rm_logs:
             rm_df = pd.DataFrame(st.session_state.rm_logs)
-            st.table(rm_df)
-            if st.session_state.user_role == "Admin":
-                st.download_button("📥 Download Raw Materials Report (CSV)", rm_df.to_csv(index=False).encode('utf-8'), "raw_materials.csv", "text/csv")
+            
+            use_date_filter = st.checkbox("Filter by Purchase Date")
+            if use_date_filter and "Date" in rm_df.columns:
+                unique_dates = list(rm_df["Date"].unique())
+                selected_date = st.selectbox("Select Date", unique_dates)
+                rm_df = rm_df[rm_df["Date"] == selected_date]
+            
+            st.dataframe(rm_df, use_container_width=True)
+            
+            csv_data = rm_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="🖨️ Download / Print Raw Materials Report (CSV for Manual Files)",
+                data=csv_data,
+                file_name=f"Raw_Materials_Logs_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv"
+            )
         else:
             st.info("No Raw Materials records found yet.")
 
+    # 4. LETTERS & MEMOS
     elif report_category == "Official Letters & Memos":
         st.subheader("✉️ Official Letters & Memos Records")
         if st.session_state.letters_logs:
             letters_df = pd.DataFrame(st.session_state.letters_logs)
-            st.table(letters_df)
-            if st.session_state.user_role == "Admin":
-                st.download_button("📥 Download Letters Report (CSV)", letters_df.to_csv(index=False).encode('utf-8'), "letters_memos.csv", "text/csv")
+            
+            use_date_filter = st.checkbox("Filter by Document Date")
+            if use_date_filter and "Date" in letters_df.columns:
+                unique_dates = list(letters_df["Date"].unique())
+                selected_date = st.selectbox("Select Date", unique_dates)
+                letters_df = letters_df[letters_df["Date"] == selected_date]
+            
+            st.dataframe(letters_df, use_container_width=True)
+            
+            csv_data = letters_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="🖨️ Download / Print Letters Report (CSV for Manual Files)",
+                data=csv_data,
+                file_name=f"Letters_Memos_Report_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv"
+            )
         else:
             st.info("No letters or memos recorded yet.")
 
+    # 5. INVOICES & DISPATCHED ORDERS
     elif report_category == "Invoices & Dispatched Orders":
         st.subheader("📄 Invoices & Dispatched Orders Ledger")
         if st.session_state.orders:
@@ -697,10 +757,17 @@ elif menu_selection == "📋 Directors Dashboard":
                     "Issued By": ord_item.get("Issued By", "N/A")
                 })
             orders_df = pd.DataFrame(display_orders)
-            st.table(orders_df)
+            st.dataframe(orders_df, use_container_width=True)
+            
+            csv_data = orders_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="🖨️ Download / Print Invoices History (CSV for Manual Files)",
+                data=csv_data,
+                file_name=f"Invoices_Dispatched_Orders_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv"
+            )
             
             if st.session_state.user_role == "Admin":
-                st.download_button("📥 Download All Invoices History (CSV)", orders_df.to_csv(index=False).encode('utf-8'), "invoices_history.csv", "text/csv")
                 if st.button("Clear All Orders History"):
                     st.session_state.orders = []
                     st.rerun()
